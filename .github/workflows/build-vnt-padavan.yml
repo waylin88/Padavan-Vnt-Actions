@@ -1,4 +1,4 @@
-name: Build Padavan Firmware
+name: Build_Padavan_Firmware
 
 on:
   workflow_dispatch:
