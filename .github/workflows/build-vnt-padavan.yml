@@ -89,7 +89,7 @@ jobs:
           cd padavan-src/toolchain-mipsel
           sh ./dl_toolchain.sh
 
-      # 5. 精准修改默认 LAN IP
+      # 5. 精准修改默认IP，修改文件defaults.h
       - name: 修改默认 LAN IP
         run: |
           TARGET_IP="${{ matrix.ip }}"
@@ -108,19 +108,12 @@ jobs:
               echo ">>> 已成功修改 $DEF_H :"
               grep -E "DEF_LAN_ADDR|DEF_LAN_DHCP" "$DEF_H"
             fi
-
-            # 2. 精准修改 defaults.c (防止源码中存在 C 语言层面的硬编码)
-            DEF_C="padavan-src/trunk/user/shared/defaults.c"
-            if [ -f "$DEF_C" ]; then
-              sed -i -E "s/192\.168\.[0-9]+\.1\b/${TARGET_IP}/g" "$DEF_C"
-              sed -i -E "s/192\.168\.[0-9]+\./${NET_PREFIX}./g" "$DEF_C"
-              echo ">>> 已成功修改 $DEF_C 地址映射"
-            fi
           fi
+          echo ">>> 查看修改后文件："
           cat padavan-src/trunk/user/shared/defaults.h
           
       # 5.1 同步并动态修改 vntc 脚本文件
-      - name: Sync and Modify VNTC Script
+      - name: 同步并动态修改vntc脚本文件
         run: |
           TARGET_IP="${{ matrix.ip }}"
           ALL_IPS="${{ github.event.inputs.custom_ips }}"
