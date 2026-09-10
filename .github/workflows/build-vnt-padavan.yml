@@ -74,8 +74,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git build-essential gawk flex bison gperf libtool \
-            autoconf automake m4 pkg-config gettext python3-docutils libncurses5-dev \
-            libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev
+            autoconf automake m4 pkg-config gettext autopoint python3-docutils libncurses5-dev \
+            libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev fakeroot
 
       # 3. 克隆 hanwckf Padavan 源码
       - name: Clone hanwckf Padavan Source
