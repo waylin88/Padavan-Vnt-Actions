@@ -1,4 +1,4 @@
-name: "🛠️ Padavan 固件云编译 (仅修改 IP)"
+name: "Padavan-VNT-Actions"
 run-name: "编译机型 [${{ github.event.inputs.target_board }}] - IP: ${{ github.event.inputs.custom_ips }}"
 
 on:
