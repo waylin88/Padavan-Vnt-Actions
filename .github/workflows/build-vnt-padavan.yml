@@ -94,36 +94,36 @@ jobs:
           sh ./dl_toolchain.sh
 
       # 5. 同步自定义插件 (plugins -> user/ 目录)
-      - name: Sync Plugins
-        run: |
-          if [ -d "build-repo/plugins" ]; then
-            echo ">>> 同步 plugins 到 trunk/user/..."
-            mkdir -p padavan-src/trunk/user/
-            cp -rf build-repo/plugins/* padavan-src/trunk/user/ || true
-          fi
+      #- name: Sync Plugins
+      #  run: |
+      #    if [ -d "build-repo/plugins" ]; then
+      #      echo ">>> 同步 plugins 到 trunk/user/..."
+      #      mkdir -p padavan-src/trunk/user/
+      #      cp -rf build-repo/plugins/* padavan-src/trunk/user/ || true
+      #   fi
 
       # 6. 应用机型专属配置 (targets -> configs/boards/机型/)
-      - name: Apply Target Configurations
-        run: |
-          BOARD="${{ github.event.inputs.target_board }}"
-          if [ -d "build-repo/targets/$BOARD" ]; then
-            echo ">>> 应用 $BOARD 机型专属配置..."
-            cp -rf build-repo/targets/$BOARD/* padavan-src/trunk/configs/boards/$BOARD/ || true
-          fi
+      #- name: Apply Target Configurations
+      #  run: |
+      #    BOARD="${{ github.event.inputs.target_board }}"
+      #    if [ -d "build-repo/targets/$BOARD" ]; then
+      #      echo ">>> 应用 $BOARD 机型专属配置..."
+      #      cp -rf build-repo/targets/$BOARD/* padavan-src/trunk/configs/boards/$BOARD/ || true
+      #    fi
 
       # 7. 打入补丁文件 (patches/*.patch)
-      - name: Apply Patches
-        run: |
-          if [ -d "build-repo/patches" ]; then
-            echo ">>> 打入 patches 补丁..."
-            cd padavan-src
-            for patch in ../build-repo/patches/*.patch; do
-              if [ -f "$patch" ]; then
-                echo "Applying $patch"
-                patch -p1 < "$patch" || true
-              fi
-            done
-          fi
+      #- name: Apply Patches
+      #  run: |
+      #    if [ -d "build-repo/patches" ]; then
+      #      echo ">>> 打入 patches 补丁..."
+      #      cd padavan-src
+      #      for patch in ../build-repo/patches/*.patch; do
+      #        if [ -f "$patch" ]; then
+      #          echo "Applying $patch"
+      #          patch -p1 < "$patch" || true
+      #        fi
+      #      done
+      #    fi
 
       # 8. 精准修改 hanwckf 源码默认 IP
       - name: Modify Default IP Address
