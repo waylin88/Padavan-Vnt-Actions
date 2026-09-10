@@ -106,23 +106,26 @@ jobs:
           chmod +x ./clear_tree
           fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
 
-      # 7. 打包编译产物
+      # 7. 收集并打包产物
       - name: Collect Artifacts
         run: |
           mkdir -p output_files
           BOARD="${{ github.event.inputs.target_board }}"
           TARGET_IP="${{ matrix.ip }}"
           
-          find padavan-src/trunk/images/ -name "*.trx" -o -name "*.bin" -exec cp {} output_files/ \;
-          cd output_files
-          for file in *; do
+          # 进入实际产物目录提取固件
+          cd padavan-src/trunk/images
+          for file in *.trx *.bin; do
             if [ -f "$file" ]; then
-              mv "$file" "${BOARD}_${TARGET_IP}_${file}"
+              echo ">>> 找到生成的固件: $file"
+              cp -v "$file" "../../../output_files/${BOARD}_${TARGET_IP}_${file}"
             fi
           done
 
+      # 8. 上传固件产物
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Padavan_${{ github.event.inputs.target_board }}_${{ matrix.ip }}
           path: output_files/*
+          if-no-files-found: error
