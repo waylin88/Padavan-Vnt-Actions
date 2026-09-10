@@ -104,7 +104,7 @@ jobs:
           cd padavan-src/trunk
           chmod +x ./build_firmware
           chmod +x ./clear_tree
-          ./build_firmware ${{ github.event.inputs.target_board }}
+          fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
 
       # 7. 打包编译产物
       - name: Collect Artifacts
