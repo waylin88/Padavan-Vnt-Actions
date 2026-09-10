@@ -248,10 +248,32 @@ jobs:
           path: output_files/*
           if-no-files-found: error
 
-      - name: Upload Firmware to GitHub Release
+release:
+    needs: build
+    if: github.event.inputs.upload_release == 'true' && !cancelled()
+    runs-on: ubuntu-22.04
+    steps:
+      - name: 下载编译出的固件
+        uses: actions/download-artifact@v4
+        with:
+          path: release_files
+
+      - name: 整理固件文件
+        run: |
+          mkdir -p release_dir
+          # 递归搜寻 TRX 和 BIN 固件并复制到 release_dir
+          find release_files/ -type f \( -name "*.trx" -o -name "*.bin" \) -exec cp {} release_dir/ \;
+          
+          # 验证 release_dir 中是否有文件
+          if [ -z "$(ls -A release_dir)" ]; then
+            echo "错误：release_dir 目录为空，没有找到编译产物！"
+            exit 1
+          fi
+
+      - name: 自动发布到 GitHub Release
         uses: ncipollo/release-action@v1.14.0
         with:
-          tag: "Padavan_${{ github.event.inputs.target_board }}_${{ github.run_id }}"
+          tag: "Padavan_${{ github.event.inputs.target_board }}_$(date +'%Y%m%d_%H%M%S')"
           name: "Padavan 固件 - ${{ github.event.inputs.target_board }}"
           body: |
             ### 🛠️ Padavan 云编译产物
@@ -259,3 +281,5 @@ jobs:
             - **WiFi 名称**: `YYWiFi`
           artifacts: "release_dir/*"
           token: ${{ secrets.PERSONAL_TOKEN }}
+          allowUpdates: true
+          replacesArtifacts: true
