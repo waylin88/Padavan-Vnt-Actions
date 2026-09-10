@@ -105,9 +105,10 @@ jobs:
               grep -rl "192.168.1.1" padavan-src/trunk/user/shared/ | xargs sed -i "s/192.168.1.1/$TARGET_IP/g" || true
             fi
           fi
+          cat padavan-src/trunk/user/shared/defaults.h
           
       # 5.1 同步并动态修改 vntc 脚本文件
-      - name: 同步并动态修改 vntc 脚本文件
+      - name: Sync and Modify VNTC Script
         run: |
           TARGET_IP="${{ matrix.ip }}"
           ALL_IPS="${{ github.event.inputs.custom_ips }}"
@@ -126,7 +127,8 @@ jobs:
           [ ! -f "$SCRIPT_FILE" ] && SCRIPT_FILE="padavan-src/trunk/user/vntc/vntc.sh"
           
           if [ -f "$SCRIPT_FILE" ] && [ "$TARGET_IP" != "default" ]; then
-            SUBNET_INDEX=$(echo "$TARGET_IP" | awk -F. '{print $3}')
+            # 精准提取网段末端的子网序号 (支持 192.168.X.1 或 10.168.X.1)
+            SUBNET_INDEX=$(echo "$TARGET_IP" | awk -F. '{print $(NF-1)}')
             CURRENT_VNT_IP="10.2.0.${SUBNET_INDEX}"
             
             echo "当前 LAN IP: $TARGET_IP -> 转换 VNT IP: $CURRENT_VNT_IP"
@@ -134,34 +136,26 @@ jobs:
             # 替换 ip: 行
             sed -i -E "s/ip: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/ip: ${CURRENT_VNT_IP}/g" "$SCRIPT_FILE"
             
-            # 动态生成 in_ips 块（改用纯 Bash 构建多行内容）
-            IN_IPS_TEXT=""
+            # 动态构建多行 in_ips 块
+            TMP_IPS_FILE=$(mktemp)
             for raw_ip in $(echo "$ALL_IPS" | tr ',' ' '); do
               ip_item=$(echo "$raw_ip" | xargs)
               if [ -n "$ip_item" ] && [ "$ip_item" != "$TARGET_IP" ]; then
-                other_idx=$(echo "$ip_item" | awk -F. '{print $3}')
+                other_idx=$(echo "$ip_item" | awk -F. '{print $(NF-1)}')
                 other_segment=$(echo "$ip_item" | sed -E 's/\.[0-9]+$/\.0\/24/')
                 other_vnt="10.2.0.${other_idx}"
-                IN_IPS_TEXT="${IN_IPS_TEXT}  - ${other_segment},${other_vnt}\n"
+                echo "  - ${other_segment},${other_vnt}" >> "$TMP_IPS_FILE"
               fi
             done
             
-            # 将生成的多行文本精准写入 in_ips 块下方
-            if [ -n "$IN_IPS_TEXT" ]; then
-              export IN_IPS_TEXT
-              python3 -c '
-            import os, re
-            file_path = "'"$SCRIPT_FILE"'"
-            text = os.environ["IN_IPS_TEXT"].rstrip()
-            with open(file_path, "r") as f:
-                content = f.read()
-            # 替换 in_ips 块及其子项
-            pattern = r"in_ips:\n(\s*-\s*.*\n)*"
-            new_content = re.sub(pattern, "in_ips:\n" + text + "\n", content)
-            with open(file_path, "w") as f:
-                f.write(new_content)
-            '
+            # 如果生成了路由映射，精准替换 in_ips: 块
+            if [ -s "$TMP_IPS_FILE" ]; then
+              # 先清除原本 in_ips 块下的所有 "- 10.xxx" 列表项
+              sed -i '/^in_ips:/,/^[a-zA-Z0-9_]/{ /^in_ips:/! { /^\s*- /d } }' "$SCRIPT_FILE"
+              # 在 in_ips: 这一行下方插入临时文件中的新增路由内容
+              sed -i "/^in_ips:/r $TMP_IPS_FILE" "$SCRIPT_FILE"
             fi
+            rm -f "$TMP_IPS_FILE"
             
             echo ">>> 修改后的脚本配置预览："
             cat "$SCRIPT_FILE"
