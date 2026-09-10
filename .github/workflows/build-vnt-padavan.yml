@@ -79,9 +79,9 @@ jobs:
             libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev fakeroot
 
       # 3. 克隆 hanwckf Padavan 源码
-      - name: Clone hanwckf Padavan Source
+      - name: 拉取Padavan源码
         run: |
-          git clone --depth 1 -b $REPO_BRANCH $REPO_URL padavan-src
+          git clone --depth 1 -b $REPO_BRANCH https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/waylin88/rt-n56u.git padavan-src
 
       # 4. 下载交叉编译工具链
       - name: Prepare Toolchain
