@@ -161,6 +161,21 @@ jobs:
             cat "$SCRIPT_FILE"
           fi
           
+      # 5.2 将 Actions 仓库中的 trunk 机型配置文件同步覆盖至源码目录
+      - name: Sync Custom Trunk & Board Configs
+        run: |
+          echo ">>> 开始同步自定义 trunk 机型配置文件..."
+          
+          # 检查 Actions 仓库根目录下是否存在 trunk 文件夹
+          if [ -d "build-repo/trunk" ]; then
+            # 使用 cp -aRF 保持文件权限并强制递归覆盖到源码 trunk 目录
+            cp -aRF build-repo/trunk/* padavan-src/trunk/
+            echo ">>> 机型配置文件同步完成！同步目录预览："
+            ls -la padavan-src/trunk/configs/boards/ || true
+          else
+            echo "⚠️ 未在 Actions 仓库中找到 trunk 目录，跳过同步步骤。"
+          fi
+          
       # 6. 执行 Padavan 编译
       - name: Build Firmware
         run: |
