@@ -55,13 +55,14 @@ jobs:
           
           echo "ip_matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
 
-  build:
+build:
     needs: parse-inputs
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        ip: ${{ json(needs.parse-inputs.outputs.ip_matrix) }}
+        # 正确解析 json 字符串
+        ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
 
     steps:
       - name: Checkout Code
