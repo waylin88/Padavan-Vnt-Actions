@@ -1,21 +1,9 @@
-name: "🛠️ Padavan 固件云编译 (hanwckf 源码)"
+name: "🛠️ Padavan 固件云编译 (仅修改 IP)"
 run-name: "编译机型 [${{ github.event.inputs.target_board }}] - IP: ${{ github.event.inputs.custom_ips }}"
 
 on:
   workflow_dispatch:
     inputs:
-      repo_url:
-        type: string
-        description: 'Padavan 源码仓库 Git 地址'
-        required: true
-        default: 'https://github.com/hanwckf/rt-n56u.git'
-
-      repo_branch:
-        type: string
-        description: '源码分支 (Branch)'
-        required: true
-        default: 'master'
-
       target_board:
         type: choice
         description: '选择机型'
@@ -39,9 +27,14 @@ on:
         required: false
         default: '192.168.1.1, 192.168.2.1, 10.0.0.1'
 
+env:
+  REPO_URL: https://github.com/hanwckf/rt-n56u.git
+  REPO_BRANCH: master
+  TZ: Asia/Shanghai
+
 jobs:
   parse-inputs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       ip_matrix: ${{ steps.set-matrix.outputs.ip_matrix }}
     steps:
@@ -61,82 +54,51 @@ jobs:
 
   build:
     needs: parse-inputs
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
 
     steps:
-      # 1. 拉取当前云编译仓库 (含 patches, targets, plugins)
+      # 1. 检查当前仓库
       - name: Checkout Actions Repo
         uses: actions/checkout@v4
         with:
           path: 'build-repo'
 
-      # 2. 安装 hanwckf 源码所需的编译依赖与交叉工具链
+      # 2. 初始化环境（安装基础工具链）
       - name: Prepare Toolchain Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
           sudo apt-get install -y git build-essential gawk flex bison gperf libtool \
             autoconf automake m4 pkg-config gettext python3-docutils libncurses5-dev \
             libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev
 
-      # 3. 克隆 hanwckf 源码
+      # 3. 克隆 hanwckf Padavan 源码
       - name: Clone hanwckf Padavan Source
         run: |
-          git clone --depth 1 -b ${{ github.event.inputs.repo_branch }} ${{ github.event.inputs.repo_url }} padavan-src
+          git clone --depth 1 -b $REPO_BRANCH $REPO_URL padavan-src
 
-      # 4. 下载并准备交叉编译工具链 (Toolchain)
+      # 4. 下载交叉编译工具链
       - name: Prepare Toolchain
         run: |
           cd padavan-src/toolchain-mipsel
           sh ./dl_toolchain.sh
 
-      # 5. 同步自定义插件 (plugins -> user/ 目录)
-      #- name: Sync Plugins
-      #  run: |
-      #    if [ -d "build-repo/plugins" ]; then
-      #      echo ">>> 同步 plugins 到 trunk/user/..."
-      #      mkdir -p padavan-src/trunk/user/
-      #      cp -rf build-repo/plugins/* padavan-src/trunk/user/ || true
-      #   fi
-
-      # 6. 应用机型专属配置 (targets -> configs/boards/机型/)
-      #- name: Apply Target Configurations
-      #  run: |
-      #    BOARD="${{ github.event.inputs.target_board }}"
-      #    if [ -d "build-repo/targets/$BOARD" ]; then
-      #      echo ">>> 应用 $BOARD 机型专属配置..."
-      #      cp -rf build-repo/targets/$BOARD/* padavan-src/trunk/configs/boards/$BOARD/ || true
-      #    fi
-
-      # 7. 打入补丁文件 (patches/*.patch)
-      #- name: Apply Patches
-      #  run: |
-      #    if [ -d "build-repo/patches" ]; then
-      #      echo ">>> 打入 patches 补丁..."
-      #      cd padavan-src
-      #      for patch in ../build-repo/patches/*.patch; do
-      #        if [ -f "$patch" ]; then
-      #          echo "Applying $patch"
-      #          patch -p1 < "$patch" || true
-      #        fi
-      #      done
-      #    fi
-
-      # 8. 精准修改 hanwckf 源码默认 IP
+      # 5. 精准修改默认 LAN IP
       - name: Modify Default IP Address
         run: |
           TARGET_IP="${{ matrix.ip }}"
           if [ "$TARGET_IP" != "default" ]; then
             echo ">>> 修改 LAN 默认 IP 地址为: $TARGET_IP"
             cd padavan-src/trunk
-            # 替换 defaults.h 中的 DEFAULT_LAN_IPADDR 定义
             sed -i -E 's/192\.168\.[0-9]+\.[0-9]+/'"$TARGET_IP"'/g' defaults.h || true
           fi
 
-      # 9. 执行 hanwckf 编译脚本
+      # 6. 执行 Padavan 编译
       - name: Build Firmware
         run: |
           cd padavan-src/trunk
@@ -144,7 +106,7 @@ jobs:
           chmod +x ./clear_tree
           ./build_firmware ${{ github.event.inputs.target_board }}
 
-      # 10. 收集并打包产物
+      # 7. 打包编译产物
       - name: Collect Artifacts
         run: |
           mkdir -p output_files
