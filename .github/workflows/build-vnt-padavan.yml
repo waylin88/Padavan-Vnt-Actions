@@ -35,7 +35,9 @@ on:
         description: '上传 RELEASE'
         default: true
 
+# 必须有这一行！且必须顶格写！
 jobs:
+  # parse-inputs 任务，缩进 2 个空格
   parse-inputs:
     runs-on: ubuntu-latest
     outputs:
@@ -55,13 +57,13 @@ jobs:
           
           echo "ip_matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
 
-build:
+  # build 任务，缩进 2 个空格，与 parse-inputs 对齐
+  build:
     needs: parse-inputs
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        # 正确解析 json 字符串
         ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
 
     steps:
