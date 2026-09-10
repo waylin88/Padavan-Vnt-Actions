@@ -94,15 +94,27 @@ jobs:
         run: |
           TARGET_IP="${{ matrix.ip }}"
           if [ "$TARGET_IP" != "default" ]; then
-            echo ">>> 修改 LAN 默认 IP 地址为: $TARGET_IP"
-            # 精准定位到 Padavan 源码中的 shared 库文件
-            DEFAULTS_FILE=$(find padavan-src/trunk/user/shared/ -name "defaults.h" -o -name "defaults.c" | head -n 1)
-            if [ -f "$DEFAULTS_FILE" ]; then
-              sed -i -E 's/192\.168\.[0-9]+\.[0-9]+/'"$TARGET_IP"'/g' "$DEFAULTS_FILE"
-              echo ">>> 已成功修改 $DEFAULTS_FILE 文件的默认 IP"
-            else
-              echo "⚠️ 未找到 defaults.h / defaults.c 文件，尝试通用搜索修改..."
-              grep -rl "192.168.1.1" padavan-src/trunk/user/shared/ | xargs sed -i "s/192.168.1.1/$TARGET_IP/g" || true
+            echo ">>> 开始修改 LAN 默认 IP 地址为: $TARGET_IP"
+            
+            # 计算目标 IP 的前三段网段 (例如 10.168.1.1 -> 10.168.1)
+            NET_PREFIX=$(echo "$TARGET_IP" | awk -F. '{print $1"."$2"."$3}')
+            
+            # 1. 精准修改 defaults.h
+            DEF_H="padavan-src/trunk/user/shared/defaults.h"
+            if [ -f "$DEF_H" ]; then
+              sed -i -E "s/#define DEF_LAN_ADDR\s+\".*\"/#define DEF_LAN_ADDR\t\t\"${TARGET_IP}\"/g" "$DEF_H"
+              sed -i -E "s/#define DEF_LAN_DHCP_BEG\s+\".*\"/#define DEF_LAN_DHCP_BEG\t\"${NET_PREFIX}.100\"/g" "$DEF_H"
+              sed -i -E "s/#define DEF_LAN_DHCP_END\s+\".*\"/#define DEF_LAN_DHCP_END\t\"${NET_PREFIX}.244\"/g" "$DEF_H"
+              echo ">>> 已成功修改 $DEF_H :"
+              grep -E "DEF_LAN_ADDR|DEF_LAN_DHCP" "$DEF_H"
+            fi
+
+            # 2. 精准修改 defaults.c (防止源码中存在 C 语言层面的硬编码)
+            DEF_C="padavan-src/trunk/user/shared/defaults.c"
+            if [ -f "$DEF_C" ]; then
+              sed -i -E "s/192\.168\.[0-9]+\.1\b/${TARGET_IP}/g" "$DEF_C"
+              sed -i -E "s/192\.168\.[0-9]+\./${NET_PREFIX}./g" "$DEF_C"
+              echo ">>> 已成功修改 $DEF_C 地址映射"
             fi
           fi
           cat padavan-src/trunk/user/shared/defaults.h
