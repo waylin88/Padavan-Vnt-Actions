@@ -252,14 +252,16 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      # ... 编译步骤 ...
+      # ... 前面的编译步骤 ...
       - name: Upload firmware to artifact
         uses: actions/upload-artifact@v4
+        if: steps.compile.outputs.status == 'success' && !cancelled()
         with:
           name: Padavan_${{ github.event.inputs.target_board }}
           path: trunk/images/*.trx
 
-  release: # ✅ 正确！前面只有 2 个空格，与上面的 build: 垂直对齐
+  # ✅ 注意：直接写 release:，前面保留 2 个空格，与上面的 build: 对齐！千万不要在上面加 jobs:
+  release:
     needs: build
     if: github.event.inputs.upload_release == 'true' && !cancelled()
     runs-on: ubuntu-22.04
