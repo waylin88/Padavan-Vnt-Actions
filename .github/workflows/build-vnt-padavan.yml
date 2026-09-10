@@ -63,7 +63,7 @@ jobs:
     steps:
       # 1. 检查当前仓库
       - name: Checkout Actions Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
         with:
           path: 'build-repo'
 
@@ -124,7 +124,7 @@ jobs:
 
       # 8. 上传固件产物
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.3
         with:
           name: Padavan_${{ github.event.inputs.target_board }}_${{ matrix.ip }}
           path: output_files/*
