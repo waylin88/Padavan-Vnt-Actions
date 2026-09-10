@@ -1,18 +1,32 @@
-name: "🛠️ Padavan 固件云编译"
-run-name: "编译机型 [${{ github.event.inputs.target_board }}]"
+name: "🛠️ Padavan 固件云编译 (hanwckf 源码)"
+run-name: "编译机型 [${{ github.event.inputs.target_board }}] - IP: ${{ github.event.inputs.custom_ips }}"
 
 on:
   workflow_dispatch:
     inputs:
+      repo_url:
+        type: string
+        description: 'Padavan 源码仓库 Git 地址'
+        required: true
+        default: 'https://github.com/hanwckf/rt-n56u.git'
+
+      repo_branch:
+        type: string
+        description: '源码分支 (Branch)'
+        required: true
+        default: 'master'
+
       target_board:
         type: choice
         description: '选择机型'
         required: true
-        default: 'BOARD_JSH03'
+        default: 'K2P'
         options:
-          - 'BOARD_JSH03'
-          - 'zte-e8820v2'
           - 'K2P'
+          - 'K2P_nano'
+          - 'PSG1218'
+          - 'MI-3'
+          - 'MI-R3G'
 
       enable_custom_ip:
         type: boolean
@@ -25,19 +39,7 @@ on:
         required: false
         default: '192.168.1.1, 192.168.2.1, 10.0.0.1'
 
-      upload_artifacts:
-        type: boolean
-        description: '上传 bin 文件夹到 Artifacts'
-        default: false
-
-      upload_release:
-        type: boolean
-        description: '上传 RELEASE'
-        default: true
-
-# 必须有这一行！且必须顶格写！
 jobs:
-  # parse-inputs 任务，缩进 2 个空格
   parse-inputs:
     runs-on: ubuntu-latest
     outputs:
@@ -57,7 +59,6 @@ jobs:
           
           echo "ip_matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
 
-  # build 任务，缩进 2 个空格，与 parse-inputs 对齐
   build:
     needs: parse-inputs
     runs-on: ubuntu-20.04
@@ -67,20 +68,99 @@ jobs:
         ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
 
     steps:
-      - name: Checkout Code
+      # 1. 拉取当前云编译仓库 (含 patches, targets, plugins)
+      - name: Checkout Actions Repo
         uses: actions/checkout@v4
+        with:
+          path: 'build-repo'
 
-      - name: Modify IP Strategy
+      # 2. 安装 hanwckf 源码所需的编译依赖与交叉工具链
+      - name: Prepare Toolchain Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential gawk flex bison gperf libtool \
+            autoconf automake m4 pkg-config gettext python3-docutils libncurses5-dev \
+            libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev
+
+      # 3. 克隆 hanwckf 源码
+      - name: Clone hanwckf Padavan Source
+        run: |
+          git clone --depth 1 -b ${{ github.event.inputs.repo_branch }} ${{ github.event.inputs.repo_url }} padavan-src
+
+      # 4. 下载并准备交叉编译工具链 (Toolchain)
+      - name: Prepare Toolchain
+        run: |
+          cd padavan-src/toolchain-mipsel
+          sh ./dl_toolchain.sh
+
+      # 5. 同步自定义插件 (plugins -> user/ 目录)
+      - name: Sync Plugins
+        run: |
+          if [ -d "build-repo/plugins" ]; then
+            echo ">>> 同步 plugins 到 trunk/user/..."
+            mkdir -p padavan-src/trunk/user/
+            cp -rf build-repo/plugins/* padavan-src/trunk/user/ || true
+          fi
+
+      # 6. 应用机型专属配置 (targets -> configs/boards/机型/)
+      - name: Apply Target Configurations
+        run: |
+          BOARD="${{ github.event.inputs.target_board }}"
+          if [ -d "build-repo/targets/$BOARD" ]; then
+            echo ">>> 应用 $BOARD 机型专属配置..."
+            cp -rf build-repo/targets/$BOARD/* padavan-src/trunk/configs/boards/$BOARD/ || true
+          fi
+
+      # 7. 打入补丁文件 (patches/*.patch)
+      - name: Apply Patches
+        run: |
+          if [ -d "build-repo/patches" ]; then
+            echo ">>> 打入 patches 补丁..."
+            cd padavan-src
+            for patch in ../build-repo/patches/*.patch; do
+              if [ -f "$patch" ]; then
+                echo "Applying $patch"
+                patch -p1 < "$patch" || true
+              fi
+            done
+          fi
+
+      # 8. 精准修改 hanwckf 源码默认 IP
+      - name: Modify Default IP Address
         run: |
           TARGET_IP="${{ matrix.ip }}"
           if [ "$TARGET_IP" != "default" ]; then
-            echo ">>> 正在将固件默认 IP 修改为: $TARGET_IP"
-            find trunk/defaults/ -type f \( -name "defaults.h" -o -name "defaults.c" \) -exec \
-              sed -i -E 's/192\.168\.[0-9]+\.[0-9]+/'"$TARGET_IP"'/g' {} + || true
-          else
-            echo ">>> 使用源码预设的默认 IP，不做修改"
+            echo ">>> 修改 LAN 默认 IP 地址为: $TARGET_IP"
+            cd padavan-src/trunk
+            # 替换 defaults.h 中的 DEFAULT_LAN_IPADDR 定义
+            sed -i -E 's/192\.168\.[0-9]+\.[0-9]+/'"$TARGET_IP"'/g' defaults.h || true
           fi
 
+      # 9. 执行 hanwckf 编译脚本
       - name: Build Firmware
         run: |
-          echo "在此处填写你的 Padavan 编译逻辑"
+          cd padavan-src/trunk
+          chmod +x ./build_firmware
+          chmod +x ./clear_tree
+          ./build_firmware ${{ github.event.inputs.target_board }}
+
+      # 10. 收集并打包产物
+      - name: Collect Artifacts
+        run: |
+          mkdir -p output_files
+          BOARD="${{ github.event.inputs.target_board }}"
+          TARGET_IP="${{ matrix.ip }}"
+          
+          find padavan-src/trunk/images/ -name "*.trx" -o -name "*.bin" -exec cp {} output_files/ \;
+          cd output_files
+          for file in *; do
+            if [ -f "$file" ]; then
+              mv "$file" "${BOARD}_${TARGET_IP}_${file}"
+            fi
+          done
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Padavan_${{ github.event.inputs.target_board }}_${{ matrix.ip }}
+          path: output_files/*
