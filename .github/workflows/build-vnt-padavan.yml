@@ -90,35 +90,42 @@ jobs:
           sh ./dl_toolchain.sh
 
       # 5. 精准修改默认 LAN IP
-      - name: Modify Default IP Address
+      - name: 修改默认 LAN IP
         run: |
           TARGET_IP="${{ matrix.ip }}"
           if [ "$TARGET_IP" != "default" ]; then
             echo ">>> 修改 LAN 默认 IP 地址为: $TARGET_IP"
-            cd padavan-src/trunk
-            sed -i -E 's/192\.168\.[0-9]+\.[0-9]+/'"$TARGET_IP"'/g' defaults.h || true
+            # 精准定位到 Padavan 源码中的 shared 库文件
+            DEFAULTS_FILE=$(find padavan-src/trunk/user/shared/ -name "defaults.h" -o -name "defaults.c" | head -n 1)
+            if [ -f "$DEFAULTS_FILE" ]; then
+              sed -i -E 's/192\.168\.[0-9]+\.[0-9]+/'"$TARGET_IP"'/g' "$DEFAULTS_FILE"
+              echo ">>> 已成功修改 $DEFAULTS_FILE 文件的默认 IP"
+            else
+              echo "⚠️ 未找到 defaults.h / defaults.c 文件，尝试通用搜索修改..."
+              grep -rl "192.168.1.1" padavan-src/trunk/user/shared/ | xargs sed -i "s/192.168.1.1/$TARGET_IP/g" || true
+            fi
           fi
           
       # 5.1 同步并动态修改 vntc 脚本文件
-      - name: Sync and Modify VNTC Script
+      - name: 同步并动态修改 vntc 脚本文件
         run: |
           TARGET_IP="${{ matrix.ip }}"
           ALL_IPS="${{ github.event.inputs.custom_ips }}"
           
           echo ">>> 正在处理 vntc 脚本与路由映射..."
           
-          # 1. 创建目标目录并同步 patches/vntc 到 Padavan 源码
+          # 创建目标目录，如果你的 Actions 仓库有 patches/vntc 则同步
           mkdir -p padavan-src/trunk/user/vntc
-          if [ -d "build-repo/patches/vntc" ]; then
+          if [ -d "patches/vntc" ]; then
+            cp -rf patches/vntc/* padavan-src/trunk/user/vntc/
+          elif [ -d "build-repo/patches/vntc" ]; then
             cp -rf build-repo/patches/vntc/* padavan-src/trunk/user/vntc/
           fi
           
-          # 寻找目标处理文件（优先处理 start 脚本）
           SCRIPT_FILE="padavan-src/trunk/user/vntc/start"
           [ ! -f "$SCRIPT_FILE" ] && SCRIPT_FILE="padavan-src/trunk/user/vntc/vntc.sh"
           
           if [ -f "$SCRIPT_FILE" ] && [ "$TARGET_IP" != "default" ]; then
-            # 计算当前节点的数字序号 X（取 192.168.X.1 的第 3 段）
             SUBNET_INDEX=$(echo "$TARGET_IP" | awk -F. '{print $3}')
             CURRENT_VNT_IP="10.2.0.${SUBNET_INDEX}"
             
@@ -127,35 +134,33 @@ jobs:
             # 替换 ip: 行
             sed -i -E "s/ip: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/ip: ${CURRENT_VNT_IP}/g" "$SCRIPT_FILE"
             
-            # 动态生成 in_ips 列表（排除当前节点自身）
-            IN_IPS_YAML=""
-            # 将输入的 IP 列表以逗号/空格分隔循环处理
+            # 动态生成 in_ips 块（改用纯 Bash 构建多行内容）
+            IN_IPS_TEXT=""
             for raw_ip in $(echo "$ALL_IPS" | tr ',' ' '); do
-              # 过滤空字符
               ip_item=$(echo "$raw_ip" | xargs)
               if [ -n "$ip_item" ] && [ "$ip_item" != "$TARGET_IP" ]; then
                 other_idx=$(echo "$ip_item" | awk -F. '{print $3}')
                 other_segment=$(echo "$ip_item" | sed -E 's/\.[0-9]+$/\.0\/24/')
                 other_vnt="10.2.0.${other_idx}"
-                
-                IN_IPS_YAML="${IN_IPS_YAML}  - ${other_segment},${other_vnt}\n"
+                IN_IPS_TEXT="${IN_IPS_TEXT}  - ${other_segment},${other_vnt}\n"
               fi
             done
             
-            # 清理旧的 in_ips 配置区块并插入动态生成的组网路由
-            if [ -n "$IN_IPS_YAML" ]; then
-              # 使用 awk 精准替换 in_ips: 及其下方的多行列表项目
-              awk -v new_in_ips="$IN_IPS_YAML" '
-                /^in_ips:/ {
-                  print "in_ips:"
-                  printf "%b", new_in_ips
-                  skip = 1
-                  next
-                }
-                skip && /^  - / { next }
-                skip && !/^  - / { skip = 0 }
-                { print }
-              ' "$SCRIPT_FILE" > "${SCRIPT_FILE}.tmp" && mv "${SCRIPT_FILE}.tmp" "$SCRIPT_FILE"
+            # 将生成的多行文本精准写入 in_ips 块下方
+            if [ -n "$IN_IPS_TEXT" ]; then
+              export IN_IPS_TEXT
+              python3 -c '
+            import os, re
+            file_path = "'"$SCRIPT_FILE"'"
+            text = os.environ["IN_IPS_TEXT"].rstrip()
+            with open(file_path, "r") as f:
+                content = f.read()
+            # 替换 in_ips 块及其子项
+            pattern = r"in_ips:\n(\s*-\s*.*\n)*"
+            new_content = re.sub(pattern, "in_ips:\n" + text + "\n", content)
+            with open(file_path, "w") as f:
+                f.write(new_content)
+            '
             fi
             
             echo ">>> 修改后的脚本配置预览："
@@ -163,18 +168,24 @@ jobs:
           fi
           
       # 5.2 将 Actions 仓库中的 trunk 机型配置文件同步覆盖至源码目录
-      - name: Sync Custom Trunk & Board Configs
+      - name: 文件同步覆盖至源码目录
         run: |
           echo ">>> 开始同步自定义 trunk 机型配置文件..."
           
-          # 检查 Actions 仓库根目录下是否存在 trunk 文件夹
-          if [ -d "build-repo/trunk" ]; then
-            # 使用 cp -aRF 保持文件权限并强制递归覆盖到源码 trunk 目录
-            cp -aRF build-repo/trunk/* padavan-src/trunk/
-            echo ">>> 机型配置文件同步完成！同步目录预览："
-            ls -la padavan-src/trunk/configs/boards/ || true
+          # 判断 trunk 存放位置并进行覆盖拷贝 (-rfa)
+          SRC_TRUNK=""
+          if [ -d "trunk" ]; then
+            SRC_TRUNK="trunk"
+          elif [ -d "build-repo/trunk" ]; then
+            SRC_TRUNK="build-repo/trunk"
+          fi
+          
+          if [ -n "$SRC_TRUNK" ]; then
+            # 修正：去掉不兼容的 -F 参数，使用 -rf 进行递归强制覆盖
+            cp -rf "$SRC_TRUNK"/* padavan-src/trunk/
+            echo ">>> 机型配置文件同步完成！"
           else
-            echo "⚠️ 未在 Actions 仓库中找到 trunk 目录，跳过同步步骤。"
+            echo "⚠️ 未找到自定义 trunk 目录，跳过同步。"
           fi
           
       # 6. 执行 Padavan 编译
