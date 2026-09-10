@@ -248,7 +248,18 @@ jobs:
           path: output_files/*
           if-no-files-found: error
 
-release:
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      # ... 编译步骤 ...
+      - name: Upload firmware to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Padavan_${{ github.event.inputs.target_board }}
+          path: trunk/images/*.trx
+
+  release: # ✅ 正确！前面只有 2 个空格，与上面的 build: 垂直对齐
     needs: build
     if: github.event.inputs.upload_release == 'true' && !cancelled()
     runs-on: ubuntu-22.04
@@ -261,10 +272,7 @@ release:
       - name: 整理固件文件
         run: |
           mkdir -p release_dir
-          # 递归搜寻 TRX 和 BIN 固件并复制到 release_dir
           find release_files/ -type f \( -name "*.trx" -o -name "*.bin" \) -exec cp {} release_dir/ \;
-          
-          # 验证 release_dir 中是否有文件
           if [ -z "$(ls -A release_dir)" ]; then
             echo "错误：release_dir 目录为空，没有找到编译产物！"
             exit 1
