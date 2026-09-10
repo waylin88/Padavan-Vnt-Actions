@@ -1,0 +1,54 @@
+#!/bin/sh
+sn=$(lan_eeprom_mac | awk '/MAC/ {gsub(/:/, ""); print $NF}')
+nvram set fw_sn=$sn
+pwp=$(nvram get http_passwd)
+encoded=$(echo -n $pwp | base64 | tr -d '=')
+FILE="/etc/storage/vntc.ini"
+vntgat='10.2.2.1'
+
+# 自定义组网命令：
+if [ ! -f "/etc/storage/vntc.ini" ]; then
+cat  > /etc/storage/vntc.ini <<-EOF
+token: 3316375347067009790
+device_id: $sn
+name: $encoded
+ip: 10.2.0.3
+in_ips:
+  - 10.168.1.0/24,10.2.0.1
+  - 10.168.2.0/24,10.2.0.2
+
+EOF
+
+chmod 660 /etc/storage/vntc.ini
+fi
+
+#判断是否更改密码
+
+CURRENT_VALUE=$(awk -F': ' '/^name:/ {print $2}' "$FILE")
+if [ "$CURRENT_VALUE" != "$encoded" ]; then
+    sed -i "s/^name:.*/name: $encoded/" "$FILE"
+fi
+
+
+#异地组网守护脚本
+
+cat  > /var/judge.sh <<-EOF
+#!/bin/sh
+
+if ! ping -c 3 "$vntgat" > /dev/null 2>&1; then
+    logger -t "异地组网" "检测客户端失败，尝试重新启动！"
+    vnt restart
+fi
+EOF
+
+chmod 777 /var/judge.sh
+
+sleep 8
+bridged=$(nvram get wan_route_x)
+if [ "$bridged" = "IP_Bridged" ]; then
+  vnt auto
+  sleep 8
+  vnt iptadd
+fi
+
+exit 0

@@ -1,0 +1,84 @@
+#!/bin/sh
+
+sn=$(nvram get fw_sn)
+na=$(nvram get http_username)
+file="/etc/storage/cron/crontabs/$na"
+command="*/10 * * * * /var/judge.sh"
+
+crontab() {
+    if ! grep -qFx "$command" "$file"; then
+        echo "$command" >> "$file"
+    fi
+}
+
+start_vntc() {
+    nohup vnt-cli -f /etc/storage/vntc.ini >> /dev/null &
+}
+
+stop_vntc() {
+    killall vnt-cli
+    iptdle
+}
+
+iptadd() {
+    while ! ping -c 1 10.2.2.1 &> /dev/null; do
+        sleep 10
+    done
+    sysctl -w net.ipv4.ip_forward=1 > /dev/null 2>&1
+    sleep 8
+    iptables -I INPUT -i vnt-tun -j ACCEPT
+    iptables -I FORWARD -i vnt-tun -o vnt-tun -j ACCEPT
+    iptables -I FORWARD -i vnt-tun -j ACCEPT
+    iptables -t nat -I POSTROUTING -j MASQUERADE
+    logger -t "异地组网" "防火墙规则添加完毕."
+}
+
+iptdle() {
+    iptables -D INPUT -i vnt-tun -j ACCEPT
+    iptables -D FORWARD -i vnt-tun -o vnt-tun -j ACCEPT
+    iptables -D FORWARD -i vnt-tun -j ACCEPT
+    iptables -t nat -D POSTROUTING -j MASQUERADE
+}
+
+check_status() {
+    logger -t "异地组网" "异地组网服务正在启动中..."
+    if pidof vnt-cli >/dev/null; then
+        ip=$(ifconfig vnt-tun | awk -F '[: ]+' '/inet addr/{print $4}')
+        logger -t "异地组网" "启动成功，服务ID：$sn；本地虚拟IP地址：$ip"
+        logger -t "异地组网" "启动守护程序。"
+        sleep 3
+        crontab
+        iptadd
+    else
+        logger -t "异地组网" "启动失败，等待10分钟后执行"
+        crontab
+    fi
+}
+
+auto() {
+    sleep 5
+    start_vntc
+    sleep 2
+    check_status
+}
+
+case "$1" in
+    "auto")
+        auto
+        ;;
+    "stop")
+        stop_vntc
+        ;;
+    "restart")
+        stop_vntc > /dev/null 2>&1
+        auto
+        ;;
+    "iptadd")
+        iptadd
+        ;;
+    *)
+        exit 1
+        ;;
+esac
+
+exit 0
