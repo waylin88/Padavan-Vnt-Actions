@@ -247,3 +247,22 @@ jobs:
           name: Padavan_${{ github.event.inputs.target_board }}_${{ matrix.ip }}
           path: output_files/*
           if-no-files-found: error
+
+      - name: Upload Firmware to GitHub Release
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          tag: ${{ steps.tag.outputs.release_tag }}
+          name: "Padavan 固件 - ${{ github.event.inputs.target_board }} (${{ steps.tag.outputs.release_tag }})"
+          body: |
+            ### 🛠️ Padavan 批量构建产物
+            - **编译机型**: `${{ github.event.inputs.target_board }}`
+            - **WiFi 名称**: `YYWiFi`
+            - **构建时间**: $(date +'%Y-%m-%d %H:%M:%S')
+          artifacts: "release_dir/*"
+          
+          # 📍 就是在这里修改 Token 权限！
+          # 如果开启了 Read and write permissions，保持使用 GITHUB_TOKEN 即可：
+          # token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # 如果没有开启 Read and write permissions，将其改成你的 PERSONAL_TOKEN：
+          token: ${{ secrets.PERSONAL_TOKEN }}
