@@ -92,22 +92,51 @@ jobs:
       # 5. 精准修改默认IP，修改文件defaults.h
       - name: 修改默认 LAN IP
         run: |
+          # ================= 全局参数配置区 =================
+          CUSTOM_WIFI_NAME="YYWiFi"   # ⬅️ 修改此处的 WiFi 名称
           TARGET_IP="${{ matrix.ip }}"
-          if [ "$TARGET_IP" != "default" ]; then
-            echo ">>> 开始修改 LAN 默认 IP 地址为: $TARGET_IP"
+          DEF_H="padavan-src/trunk/user/shared/defaults.h"
+
+          # ================= 逻辑处理函数定义 =================
+          update_wifi_ssids() {
+            local wifi_name="$1"
+            local target_file="$2"
             
-            # 计算目标 IP 的前三段网段 (例如 10.168.1.1 -> 10.168.1)
-            NET_PREFIX=$(echo "$TARGET_IP" | awk -F. '{print $1"."$2"."$3}')
+            echo ">>> 正在更新 WiFi SSID 前缀为: ${wifi_name}"
+            sed -i -E "s/#define DEF_WLAN_2G_SSID\s+.*/#define DEF_WLAN_2G_SSID\t\"${wifi_name}\" \"_%s\"/g" "$target_file"
+            sed -i -E "s/#define DEF_WLAN_5G_SSID\s+.*/#define DEF_WLAN_5G_SSID\t\"${wifi_name}\" \"_5G_%s\"/g" "$target_file"
+            sed -i -E "s/#define DEF_WLAN_2G_GSSID\s+.*/#define DEF_WLAN_2G_GSSID\t\"${wifi_name}\" \"_GUEST_%s\"/g" "$target_file"
+            sed -i -E "s/#define DEF_WLAN_5G_GSSID\s+.*/#define DEF_WLAN_5G_GSSID\t\"${wifi_name}\" \"_GUEST_5G_%s\"/g" "$target_file"
+          }
+
+          update_lan_ip_config() {
+            local target_ip="$1"
+            local h_file="$2"
             
-            # 1. 精准修改 defaults.h
-            DEF_H="padavan-src/trunk/user/shared/defaults.h"
-            if [ -f "$DEF_H" ]; then
-              sed -i -E "s/#define DEF_LAN_ADDR\s+\".*\"/#define DEF_LAN_ADDR\t\t\"${TARGET_IP}\"/g" "$DEF_H"
-              sed -i -E "s/#define DEF_LAN_DHCP_BEG\s+\".*\"/#define DEF_LAN_DHCP_BEG\t\"${NET_PREFIX}.100\"/g" "$DEF_H"
-              sed -i -E "s/#define DEF_LAN_DHCP_END\s+\".*\"/#define DEF_LAN_DHCP_END\t\"${NET_PREFIX}.244\"/g" "$DEF_H"
-              echo ">>> 已成功修改 $DEF_H :"
-              grep -E "DEF_LAN_ADDR|DEF_LAN_DHCP" "$DEF_H"
+            local net_prefix
+            net_prefix=$(echo "$target_ip" | awk -F. '{print $1"."$2"."$3}')
+            
+            echo ">>> 正在更新 LAN IP 配置为: ${target_ip} (网段: ${net_prefix}.x)"
+            sed -i -E "s/#define DEF_LAN_ADDR\s+\".*\"/#define DEF_LAN_ADDR\t\t\"${target_ip}\"/g" "$h_file"
+            sed -i -E "s/#define DEF_LAN_DHCP_BEG\s+\".*\"/#define DEF_LAN_DHCP_BEG\t\"${net_prefix}.100\"/g" "$h_file"
+            sed -i -E "s/#define DEF_LAN_DHCP_END\s+\".*\"/#define DEF_LAN_DHCP_END\t\"${net_prefix}.244\"/g" "$h_file"
+          }
+
+          # ================= 主执行流程 =================
+          if [ -f "$DEF_H" ]; then
+            # 1. 更新 WiFi SSID
+            update_wifi_ssids "$CUSTOM_WIFI_NAME" "$DEF_H"
+            
+            # 2. 更新 IP 及 DHCP 地址池（仅当存在矩阵 IP 时）
+            if [ "$TARGET_IP" != "default" ]; then
+              update_lan_ip_config "$TARGET_IP" "$DEF_H"
             fi
+
+            echo ">>> defaults.h 修改结果验证："
+            grep -E "DEF_WLAN_|DEF_LAN_" "$DEF_H"
+          else
+            echo "❌ 错误: 未找到 $DEF_H 文件！"
+            exit 1
           fi
           echo ">>> 查看修改后文件："
           cat padavan-src/trunk/user/shared/defaults.h
