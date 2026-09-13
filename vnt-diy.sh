@@ -8,10 +8,12 @@ set -e # 遇到错误立即停止
 # 定义绝对路径
 REPO_DIR="${GITHUB_WORKSPACE}/build-repo"
 SRC_DIR="${GITHUB_WORKSPACE}/padavan-src"
+MAKEFILE_PATH="${SRC_DIR}/trunk/user/Makefile"
 
 echo "=========================================="
 echo ">>> Actions 仓库路径: ${REPO_DIR}"
 echo ">>> Padavan 源码路径: ${SRC_DIR}"
+echo ">>> Makefile: ${MAKEFILE_PATH}"
 echo "=========================================="
 
 # 1. 覆盖机型配置文件
@@ -36,8 +38,6 @@ if [ -d "${VNTC_SRC}" ]; then
     chmod -R +x "${SRC_DIR}/trunk/user/vntc/"
 fi
 # 4. 修改 Makefile 添加 vntc 编译项
-MAKEFILE_PATH="${GITHUB_WORKSPACE}/padavan-src/trunk/user/Makefile"
-
 echo ">>> 正在直接修改 Makefile: ${MAKEFILE_PATH}"
 sed -i '/^all:/i dir_$(CONFIG_FIRMWARE_INCLUDE_VNT)\t\t+= vntc' "${MAKEFILE_PATH}"
 
