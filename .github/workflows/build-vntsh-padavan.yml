@@ -248,12 +248,12 @@ jobs:
           echo "========================================="
 
       # 8. 执行 Padavan 编译
-      # - name: Build Firmware
-      #   run: |
-      #     cd padavan-src/trunk
-      #     chmod +x ./build_firmware
-      #     chmod +x ./clear_tree
-      #     fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
+      - name: Build Firmware
+        run: |
+           cd padavan-src/trunk
+           chmod +x ./build_firmware
+           chmod +x ./clear_tree
+           fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
 
       # 9. 收集并打包产物
       - name: Collect Artifacts
