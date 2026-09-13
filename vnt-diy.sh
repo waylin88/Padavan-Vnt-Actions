@@ -35,7 +35,14 @@ if [ -d "${VNTC_SRC}" ]; then
     cp -rf "${VNTC_SRC}"/* "${SRC_DIR}/trunk/user/vntc/"
     chmod -R +x "${SRC_DIR}/trunk/user/vntc/"
 fi
+# 4. 修改 Makefile 添加 vntc 编译项
+MAKEFILE_PATH="${GITHUB_WORKSPACE}/padavan-src/trunk/user/Makefile"
 
+echo ">>> 正在直接修改 Makefile: ${MAKEFILE_PATH}"
+sed -i '/^all:/i dir_$(CONFIG_FIRMWARE_INCLUDE_VNT)\t\t+= vntc' "${MAKEFILE_PATH}"
+
+echo ">>> Makefile 修改结果验证："
+grep -B 2 "^all:" "${MAKEFILE_PATH}"
 echo "=========================================="
 echo ">>> vnt-diy.sh 执行成功！"
 echo "=========================================="
