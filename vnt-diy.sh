@@ -55,3 +55,11 @@ sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("start");' 
 sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("nvram set fw_sn=$(lan_eeprom_mac | awk '\''/MAC/ {gsub(/:/, \\"\\"); print $NF}'\'')");' "${RC_C_PATH}"
 echo ">>> rc.c 修改结果验证："
 grep -A 3 "// system ready" "${RC_C_PATH}"
+
+# 8. 修改 net_wan.c 自动调用 system("vnt auto");
+
+echo ">>> 正在直接修改 net_wan.c: ${SRC_DIR}/trunk/user/rc/net_wan.c"
+# 精准插入：在 doSystem("%s %s %s %s", script_postw... 行下方追加带 Tab 缩进的 system("vnt auto");
+sed -i '/doSystem("%s %s %s %s", script_postw/a \\tsystem("vnt auto");' "${SRC_DIR}/trunk/user/rc/net_wan.c"
+echo ">>> net_wan.c 修改结果验证："
+grep -A 3 "script_postw" "${NET_WAN_C_PATH}"
