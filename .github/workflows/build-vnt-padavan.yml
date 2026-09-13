@@ -8,7 +8,7 @@ on:
         type: choice
         description: '选择机型'
         required: true
-        default: 'JSH-03'
+        default: 'E8820V2'
         options:
           - 'JSH-03'
           - 'ZY-L1'
@@ -26,11 +26,11 @@ on:
         type: string
         description: '填入 IP 列表 (用逗号或空格隔开)'
         required: false
-        default: '10.168.1.1, 10.168.2.1'
+        default: '10.168.1.1'
 
 env:
   REPO_URL: https://github.com/waylin88/rt-n56u.git
-  REPO_BRANCH: master
+  REPO_BRANCH: trae/agent-rwINKX
   TZ: Asia/Shanghai
 
 jobs:
