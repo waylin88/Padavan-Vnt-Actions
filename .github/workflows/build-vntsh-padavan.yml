@@ -1,5 +1,6 @@
+
 name: "Padavan-VNT-脚本-Actions"
-run-name: "编译机型 [${{ github.event.inputs.target_board }}] - VNT_IP: ${{ github.event.inputs.custom_ip }}"
+run-name: "编译机型 [${{ github.event.inputs.target_board }}] - LAN IPs: ${{ github.event.inputs.custom_ips }}"
 
 on:
   workflow_dispatch:
@@ -17,34 +18,17 @@ on:
           - 'E8820V2'
           - 'ZTE_E8820S'
 
-      enable_custom_ip:
-        type: boolean
-        description: '修改 LAN 侧 IP 地址 (勾选生效)'
-        default: true
-
       custom_ips:
         type: string
-        description: '填入 LAN IP 列表 (用逗号或空格隔开)'
-        required: false
-        default: '10.168.1.1'
+        description: '填入 LAN IP 列表 (逗号分隔，如: 10.168.1.1,10.168.2.1)'
+        required: true
+        default: '10.168.1.1,10.168.2.1'
 
       custom_token:
         type: string
-        description: '输入自定义 Token'
-        required: false
+        description: '输入 VNT Token (同一批编译统一使用)'
+        required: true
         default: '3316375347067009790'
-
-      custom_ip:
-        type: string
-        description: '输入 VNT 自定义 IP'
-        required: false
-        default: '10.2.0.3'
-
-      custom_in_ips:
-        type: string
-        description: '输入 in_ips 路由映射 (用 | 分隔，格式: 网段,VNT_IP|网段,VNT_IP)'
-        required: false
-        default: '10.168.1.0/24,10.2.0.1|10.168.2.0/24,10.2.0.2'
 
 env:
   REPO_URL: https://github.com/waylin88/rt-n56u.git
@@ -60,15 +44,12 @@ jobs:
       - name: Parse IP Inputs
         id: set-matrix
         run: |
-          ENABLE_IP="${{ github.event.inputs.enable_custom_ip }}"
           RAW_IPS="${{ github.event.inputs.custom_ips }}"
-          
-          if [ "$ENABLE_IP" = "true" ] && [ -n "$(echo $RAW_IPS | tr -d ' ')" ]; then
-            JSON_ARRAY=$(echo "$RAW_IPS" | tr ',' ' ' | xargs -n1 | jq -R . | jq -s -c .)
-          else
+          # 将逗号分隔的IP转换为JSON数组（自动去除首尾空格和空项）
+          JSON_ARRAY=$(echo "$RAW_IPS" | tr ',' '\n' | xargs -n1 | grep -v '^$' | jq -R . | jq -s -c .)
+          if [ -z "$JSON_ARRAY" ] || [ "$JSON_ARRAY" = "[]" ]; then
             JSON_ARRAY='["default"]'
           fi
-          
           echo "ip_matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
 
   build:
@@ -78,7 +59,7 @@ jobs:
       fail-fast: false
       matrix:
         ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
-
+    
     steps:
       # 1. 检查当前仓库
       - name: Checkout Actions Repo
@@ -176,61 +157,92 @@ jobs:
           fi
           
       # 5.1 动态修改 vntc 脚本文件配置值
-      - name: 动态修改vntc脚本文件
+       - name: 动态修改vntc脚本文件
         run: |
-          # 获取手动输入的变量
+          # ========== 获取变量 ==========
+          CURRENT_LAN_IP="${{ matrix.ip }}"
+          ALL_LAN_IPS="${{ github.event.inputs.custom_ips }}"
           INPUT_TOKEN="${{ github.event.inputs.custom_token }}"
-          INPUT_IP="${{ github.event.inputs.custom_ip }}"
-          INPUT_IN_IPS="${{ github.event.inputs.custom_in_ips }}"
-          
-          echo ">>> 正在处理 vntc 脚本配置替换..."
-          
-          # 1. 定位目标脚本文件 (由 vnt-diy.sh 拷贝至源码目录)
+
+          echo "========================================="
+          echo ">>> 当前矩阵设备 LAN IP: $CURRENT_LAN_IP"
+          echo ">>> 全部 LAN IP 列表: $ALL_LAN_IPS"
+          echo ">>> Token: $INPUT_TOKEN"
+          echo "========================================="
+
+          # ========== 1. 定位目标脚本文件 ==========
           TARGET_DIR="padavan-src/trunk/user/vntc"
           SCRIPT_FILE="$TARGET_DIR/start"
           [ ! -f "$SCRIPT_FILE" ] && SCRIPT_FILE="$TARGET_DIR/vntc.sh"
-          
+
           if [ ! -f "$SCRIPT_FILE" ]; then
             echo "❌ 错误: 在 $TARGET_DIR 目录下未找到 start 或 vntc.sh 文件！"
             exit 1
           fi
-          
-          # 2. 替换 Token
+
+          # ========== 2. 替换 Token ==========
           if [ -n "$INPUT_TOKEN" ]; then
             echo ">>> 正在替换 Token..."
             sed -i -E "s/^token: .*/token: ${INPUT_TOKEN}/g" "$SCRIPT_FILE"
           fi
-          
-          # 3. 替换 IP
-          if [ -n "$INPUT_IP" ]; then
-            echo ">>> 正在替换 IP: $INPUT_IP"
-            sed -i -E "s/^ip: .*/ip: ${INPUT_IP}/g" "$SCRIPT_FILE"
-          fi
-          
-          # 4. 替换 in_ips (支持单行 | 分隔输入，自动转换为标准 YAML 格式)
-          if [ -n "$INPUT_IN_IPS" ]; then
-            echo ">>> 正在替换 in_ips 路由映射..."
-            awk -v ips="$INPUT_IN_IPS" '
-              /^in_ips:/ { 
-                print; 
-                # 将输入的字符串按 | 分割，并自动补齐标准的 YAML 缩进和空格
-                n = split(ips, lines, "\\|"); 
-                for (i = 1; i <= n; i++) { 
-                  # 去除可能存在的首尾空格，并过滤空行
-                  gsub(/^[[:space:]]+|[[:space:]]+$/, "", lines[i]);
-                  if (lines[i] != "") print "  - " lines[i]; 
-                } 
-                in_block=1; 
-                next 
-              } 
-              in_block && /^[[:space:]]*- / { next } 
-              in_block && !/^[[:space:]]/ { in_block=0 } 
+
+          # ========== 3. 自动推导 VNT IP 并替换 ==========
+          # 规则: LAN IP 第三段 = VNT IP 最后一段
+          # 例如: 10.168.1.1 -> 第三段=1 -> VNT IP=10.2.0.1
+          CURRENT_VNT_IP="10.2.0.$(echo "$CURRENT_LAN_IP" | awk -F. '{print $3}')"
+          echo ">>> 当前设备 LAN: $CURRENT_LAN_IP -> 推导 VNT IP: $CURRENT_VNT_IP"
+          sed -i -E "s/^ip: .*/ip: ${CURRENT_VNT_IP}/g" "$SCRIPT_FILE"
+
+          # ========== 4. 动态生成 in_ips 路由映射 ==========
+          # 规则: 遍历所有 LAN IP，排除自己，为每台其他设备生成一条路由
+          # 例如: 当前 10.168.1.1，另一台 10.168.2.1 -> 路由: 10.168.2.0/24,10.2.0.2
+          echo ">>> 正在生成 in_ips 路由映射..."
+          TMP_IPS_FILE=$(mktemp)
+
+          IFS=',' read -ra IP_ARRAY <<< "$ALL_LAN_IPS"
+          for lan_ip in "${IP_ARRAY[@]}"; do
+            # 去除首尾空格
+            lan_ip=$(echo "$lan_ip" | xargs)
+
+            # 跳过当前设备自己的 IP
+            if [ "$lan_ip" != "$CURRENT_LAN_IP" ]; then
+              # 提取网段: 10.168.2.1 -> 10.168.2.0/24
+              subnet=$(echo "$lan_ip" | awk -F. '{print $1"."$2"."$3".0/24"}')
+              # 推导对应 VNT IP: 10.168.2.1 -> 10.2.0.2
+              vnt_ip="10.2.0.$(echo "$lan_ip" | awk -F. '{print $3}')"
+
+              # 写入临时文件（自动补齐 YAML 列表格式 "  - "）
+              echo "  - ${subnet},${vnt_ip}" >> "$TMP_IPS_FILE"
+              echo "    ✓ 生成路由: $subnet -> $vnt_ip"
+            fi
+          done
+
+          # ========== 5. 将路由映射注入到脚本文件中 ==========
+          if [ -s "$TMP_IPS_FILE" ]; then
+            awk -v ips_file="$TMP_IPS_FILE" '
+              /^in_ips:/ {
+                print;
+                # 读取临时文件内容并打印（每行已有 "  - " 前缀）
+                while ((getline line < ips_file) > 0) print line;
+                close(ips_file);
+                in_block=1;
+                next
+              }
+              in_block && /^[[:space:]]*- / { next }
+              in_block && !/^[[:space:]]/ { in_block=0 }
               { print }
             ' "$SCRIPT_FILE" > "${SCRIPT_FILE}.tmp" && mv "${SCRIPT_FILE}.tmp" "$SCRIPT_FILE"
+          else
+            echo "⚠️  警告: 仅有一台设备，未生成 in_ips 路由映射"
           fi
-          
-          echo ">>> 修改后的脚本配置预览："
+
+          rm -f "$TMP_IPS_FILE"
+
+          # ========== 6. 预览最终配置 ==========
+          echo "========================================="
+          echo ">>> 最终生成的脚本配置预览："
           cat "$SCRIPT_FILE"
+          echo "========================================="
           
           
       # 6. 执行 Padavan 编译
