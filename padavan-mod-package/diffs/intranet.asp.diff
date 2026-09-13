@@ -1,0 +1,18 @@
+diff --git a/trunk/user/www/n56u_ribbon_fixed/device-map/intranet.asp b/trunk/user/www/n56u_ribbon_fixed/device-map/intranet.asp
+index b57583f9a8..98d20473ad 100644
+--- a/trunk/user/www/n56u_ribbon_fixed/device-map/intranet.asp
++++ b/trunk/user/www/n56u_ribbon_fixed/device-map/intranet.asp
+@@ -89,11 +89,11 @@ function update_lanip(){
+     <td><span id="LANType"></span></td>
+   </tr>
+   <tr>
+-    <th><#IP4_Addr#> LAN:</th>
++    <th><#LAN_IP4_Addr#>:</th>
+     <td><span id="LANIP4"></span></td>
+   </tr>
+   <tr>
+-    <th><#Gateway#> LAN:</th>
++    <th><#LAN_Gateway#>:</th>
+     <td><span id="LANGW4"></span></td>
+   </tr>
+   <tr>

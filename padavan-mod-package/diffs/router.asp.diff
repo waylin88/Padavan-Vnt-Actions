@@ -1,5 +1,5 @@
 diff --git a/trunk/user/www/n56u_ribbon_fixed/device-map/router.asp b/trunk/user/www/n56u_ribbon_fixed/device-map/router.asp
-index de79c824cb..fa742c90c1 100644
+index ccd1467b97..fa742c90c1 100644
 --- a/trunk/user/www/n56u_ribbon_fixed/device-map/router.asp
 +++ b/trunk/user/www/n56u_ribbon_fixed/device-map/router.asp
 @@ -68,11 +68,11 @@ function initial(){
@@ -306,6 +306,15 @@ index de79c824cb..fa742c90c1 100644
  }
  </script>
  
+@@ -618,7 +488,7 @@ window.onunload  = function(){
+       </td>
+   </tr>
+   <tr>
+-    <th><#Wireless_name#> (SSID)</th>
++    <th><#Wireless_name#></th>
+     <td>
+       <input id="sta_ssid" type="text" name="wl_ssid" value="<% nvram_get_x("", "wl_ssid"); %>" maxlength="32" size="22" class="input"/>
+     </td>
 @@ -642,47 +512,15 @@ window.onunload  = function(){
      <td>
      <select name="wl_auth_mode" class="input" onchange="change_auth_mode(this);">
