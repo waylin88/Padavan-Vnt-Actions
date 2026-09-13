@@ -140,6 +140,21 @@ jobs:
           fi
           echo ">>> 查看修改后文件："
           cat padavan-src/trunk/user/shared/defaults.h
+
+            # 📍 下面是新增的对 defaults.c 的修改代码
+          if [ -f "$DEF_C" ]; then
+            echo ">>> 正在修改 defaults.c 参数配置..."
+            # 1. 修改 rt_sta_auto 为 1
+            sed -i -E 's/\{\s*"rt_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "rt_sta_auto", "1" \}/g' "$DEF_C"
+            
+            # 2. 修改 wl_sta_auto 为 1
+            sed -i -E 's/\{\s*"wl_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "wl_sta_auto", "1" \}/g' "$DEF_C"
+            
+            echo ">>> defaults.c 修改结果验证："
+            grep -E "rt_sta_auto|wl_sta_auto" "$DEF_C"
+          else
+            echo "⚠️ 警告: 未找到 $DEF_C 文件，跳过此步骤。"
+          fi
           
       # 5.1 同步并动态修改 vntc 脚本文件
       - name: 同步并动态修改vntc脚本文件
