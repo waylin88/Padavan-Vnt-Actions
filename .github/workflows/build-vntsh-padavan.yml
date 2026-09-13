@@ -1,0 +1,239 @@
+name: "Padavan-VNT-脚本-Actions"
+run-name: "编译机型 [${{ github.event.inputs.target_board }}] - IP: ${{ github.event.inputs.custom_ips }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_board:
+        type: choice
+        description: '选择机型'
+        required: true
+        default: 'E8820V2'
+        options:
+          - 'JSH-03'
+          - 'ZY-L1'
+          - 'ZY-L1-7620N'
+          - 'ZY-L1-7628N'
+          - 'E8820V2'
+          - 'ZTE_E8820S'
+
+      enable_custom_ip:
+        type: boolean
+        description: '修改 LAN 侧 IP 地址 (勾选生效)'
+        default: true
+
+      custom_ips:
+        type: string
+        description: '填入 IP 列表 (用逗号或空格隔开)'
+        required: false
+        default: '10.168.1.1'
+
+env:
+  REPO_URL: https://github.com/waylin88/rt-n56u.git
+  REPO_BRANCH: trae/agent-rwINKX
+  TZ: Asia/Shanghai
+
+jobs:
+  parse-inputs:
+    runs-on: ubuntu-22.04
+    outputs:
+      ip_matrix: ${{ steps.set-matrix.outputs.ip_matrix }}
+    steps:
+      - name: Parse IP Inputs
+        id: set-matrix
+        run: |
+          ENABLE_IP="${{ github.event.inputs.enable_custom_ip }}"
+          RAW_IPS="${{ github.event.inputs.custom_ips }}"
+          
+          if [ "$ENABLE_IP" = "true" ] && [ -n "$(echo $RAW_IPS | tr -d ' ')" ]; then
+            JSON_ARRAY=$(echo "$RAW_IPS" | tr ',' ' ' | xargs -n1 | jq -R . | jq -s -c .)
+          else
+            JSON_ARRAY='["default"]'
+          fi
+          
+          echo "ip_matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
+
+  build:
+    needs: parse-inputs
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
+
+    steps:
+      # 1. 检查当前仓库
+      - name: Checkout Actions Repo
+        uses: actions/checkout@v4.2.2
+        with:
+          path: 'build-repo'
+
+      # 2. 初始化环境（安装基础工具链）
+      - name: Prepare Toolchain Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential gawk flex bison gperf libtool \
+            autoconf automake m4 pkg-config gettext autopoint python3-docutils libncurses5-dev \
+            libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev fakeroot
+
+      # 3. 克隆 hanwckf Padavan 源码
+      - name: 拉取Padavan源码
+        run: |
+          git clone --depth 1 -b $REPO_BRANCH https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/waylin88/rt-n56u.git padavan-src
+
+      # 📍 3.1 核心改动：在拉取源码后立即调用根目录下的 vnt-diy.sh
+      - name: 执行自定义文件替换脚本 (vnt-diy.sh)
+        run: |
+          DIY_SCRIPT=""
+          if [ -f "vnt-diy.sh" ]; then
+            DIY_SCRIPT="vnt-diy.sh"
+          elif [ -f "build-repo/vnt-diy.sh" ]; then
+            DIY_SCRIPT="build-repo/vnt-diy.sh"
+          fi
+
+          if [ -n "$DIY_SCRIPT" ]; then
+            chmod +x "$DIY_SCRIPT"
+            ./"$DIY_SCRIPT"
+          else
+            echo "⚠️ 未找到 vnt-diy.sh 脚本，跳过替换。"
+          fi
+
+      # 4. 下载交叉编译工具链
+      - name: Prepare Toolchain
+        run: |
+          cd padavan-src/toolchain-mipsel
+          sh ./dl_toolchain.sh
+
+      # 5. 精准修改默认IP，修改文件defaults.h
+      - name: 修改默认 LAN IP
+        run: |
+          CUSTOM_WIFI_NAME="YYWiFi"
+          TARGET_IP="${{ matrix.ip }}"
+          DEF_H="padavan-src/trunk/user/shared/defaults.h"
+          DEF_C="padavan-src/trunk/user/shared/defaults.c"
+
+          update_wifi_ssids() {
+            local wifi_name="$1"
+            local target_file="$2"
+            
+            echo ">>> 正在更新 WiFi SSID 前缀为: ${wifi_name}"
+            sed -i -E "s/#define DEF_WLAN_2G_SSID\s+.*/#define DEF_WLAN_2G_SSID\t\"${wifi_name}\" \"_%s\"/g" "$target_file"
+            sed -i -E "s/#define DEF_WLAN_5G_SSID\s+.*/#define DEF_WLAN_5G_SSID\t\"${wifi_name}\" \"_5G_%s\"/g" "$target_file"
+            sed -i -E "s/#define DEF_WLAN_2G_GSSID\s+.*/#define DEF_WLAN_2G_GSSID\t\"${wifi_name}\" \"_GUEST_%s\"/g" "$target_file"
+            sed -i -E "s/#define DEF_WLAN_5G_GSSID\s+.*/#define DEF_WLAN_5G_GSSID\t\"${wifi_name}\" \"_GUEST_5G_%s\"/g" "$target_file"
+          }
+
+          update_lan_ip_config() {
+            local target_ip="$1"
+            local h_file="$2"
+            
+            local net_prefix
+            net_prefix=$(echo "$target_ip" | awk -F. '{print $1"."$2"."$3}')
+            
+            echo ">>> 正在更新 LAN IP 配置为: ${target_ip} (网段: ${net_prefix}.x)"
+            sed -i -E "s/#define DEF_LAN_ADDR\s+\".*\"/#define DEF_LAN_ADDR\t\t\"${target_ip}\"/g" "$h_file"
+            sed -i -E "s/#define DEF_LAN_DHCP_BEG\s+\".*\"/#define DEF_LAN_DHCP_BEG\t\"${net_prefix}.100\"/g" "$h_file"
+            sed -i -E "s/#define DEF_LAN_DHCP_END\s+\".*\"/#define DEF_LAN_DHCP_END\t\"${net_prefix}.244\"/g" "$h_file"
+          }
+
+          if [ -f "$DEF_H" ]; then
+            update_wifi_ssids "$CUSTOM_WIFI_NAME" "$DEF_H"
+            if [ "$TARGET_IP" != "default" ]; then
+              update_lan_ip_config "$TARGET_IP" "$DEF_H"
+            fi
+            echo ">>> defaults.h 修改结果验证："
+            grep -E "DEF_WLAN_|DEF_LAN_" "$DEF_H"
+          else
+            echo "❌ 错误: 未找到 $DEF_H 文件！"
+            exit 1
+          fi
+
+          if [ -f "$DEF_C" ]; then
+            echo ">>> 正在修改 defaults.c 参数配置..."
+            sed -i -E 's/\{\s*"rt_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "rt_sta_auto", "1" \}/g' "$DEF_C"
+            sed -i -E 's/\{\s*"wl_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "wl_sta_auto", "1" \}/g' "$DEF_C"
+            
+            echo ">>> defaults.c 修改结果验证："
+            grep -E "rt_sta_auto|wl_sta_auto" "$DEF_C"
+          else
+            echo "⚠️ 警告: 未找到 $DEF_C 文件，跳过此步骤。"
+          fi
+          
+      # 5.1 同步并动态修改 vntc 脚本文件
+      - name: 同步并动态修改vntc脚本文件
+        run: |
+          TARGET_IP="${{ matrix.ip }}"
+          ALL_IPS="${{ github.event.inputs.custom_ips }}"
+          
+          echo ">>> 正在处理 vntc 脚本与路由映射..."
+          
+          mkdir -p padavan-src/trunk/user/vntc
+          if [ -d "patches/vntc" ]; then
+            cp -rf patches/vntc/* padavan-src/trunk/user/vntc/
+          elif [ -d "build-repo/patches/vntc" ]; then
+            cp -rf build-repo/patches/vntc/* padavan-src/trunk/user/vntc/
+          fi
+          
+          SCRIPT_FILE="padavan-src/trunk/user/vntc/start"
+          [ ! -f "$SCRIPT_FILE" ] && SCRIPT_FILE="padavan-src/trunk/user/vntc/vntc.sh"
+          
+          if [ -f "$SCRIPT_FILE" ] && [ "$TARGET_IP" != "default" ]; then
+            SUBNET_INDEX=$(echo "$TARGET_IP" | awk -F. '{print $(NF-1)}')
+            CURRENT_VNT_IP="10.2.0.${SUBNET_INDEX}"
+            
+            echo "当前 LAN IP: $TARGET_IP -> 转换 VNT IP: $CURRENT_VNT_IP"
+            sed -i -E "s/ip: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/ip: ${CURRENT_VNT_IP}/g" "$SCRIPT_FILE"
+            
+            TMP_IPS_FILE=$(mktemp)
+            for raw_ip in $(echo "$ALL_IPS" | tr ',' ' '); do
+              ip_item=$(echo "$raw_ip" | xargs)
+              if [ -n "$ip_item" ] && [ "$ip_item" != "$TARGET_IP" ]; then
+                other_idx=$(echo "$ip_item" | awk -F. '{print $(NF-1)}')
+                other_segment=$(echo "$ip_item" | sed -E 's/\.[0-9]+$/\.0\/24/')
+                other_vnt="10.2.0.${other_idx}"
+                echo "  - ${other_segment},${other_vnt}" >> "$TMP_IPS_FILE"
+              fi
+            done
+            
+            if [ -s "$TMP_IPS_FILE" ]; then
+              sed -i '/^in_ips:/,/^[a-zA-Z0-9_]/{ /^in_ips:/! { /^\s*- /d } }' "$SCRIPT_FILE"
+              sed -i "/^in_ips:/r $TMP_IPS_FILE" "$SCRIPT_FILE"
+            fi
+            rm -f "$TMP_IPS_FILE"
+            
+            echo ">>> 修改后的脚本配置预览："
+            cat "$SCRIPT_FILE"
+          fi
+          
+      # 6. 执行 Padavan 编译
+      - name: Build Firmware
+        run: |
+          cd padavan-src/trunk
+          chmod +x ./build_firmware
+          chmod +x ./clear_tree
+          fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
+
+      # 7. 收集并打包产物
+      - name: Collect Artifacts
+        run: |
+          mkdir -p output_files
+          BOARD="${{ github.event.inputs.target_board }}"
+          TARGET_IP="${{ matrix.ip }}"
+          
+          cd padavan-src/trunk/images
+          for file in *.trx *.bin; do
+            if [ -f "$file" ]; then
+              echo ">>> 找到生成的固件: $file"
+              cp -v "$file" "../../../output_files/${BOARD}_${TARGET_IP}_${file}"
+            fi
+          done
+
+      # 8. 上传固件产物
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: Padavan_${{ github.event.inputs.target_board }}_${{ matrix.ip }}
+          path: output_files/*
+          if-no-files-found: error
