@@ -96,6 +96,7 @@ jobs:
           CUSTOM_WIFI_NAME="YYWiFi"   # ⬅️ 修改此处的 WiFi 名称
           TARGET_IP="${{ matrix.ip }}"
           DEF_H="padavan-src/trunk/user/shared/defaults.h"
+          DEF_C="padavan-src/trunk/user/shared/defaults.c"
 
           # ================= 逻辑处理函数定义 =================
           update_wifi_ssids() {
