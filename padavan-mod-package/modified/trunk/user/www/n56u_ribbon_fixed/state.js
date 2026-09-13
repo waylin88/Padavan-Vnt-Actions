@@ -1,3 +1,4 @@
+var fw_sn = '<% nvram_get_x("", "fw_sn"); %>';
 var sw_mode = '<% nvram_get_x("", "sw_mode"); %>';
 var wan_route_x = '<% nvram_get_x("", "wan_route_x"); %>';
 var wan_proto = '<% nvram_get_x("", "wan_proto"); %>';
@@ -350,13 +351,13 @@ function show_banner(L3){
 	bc += '    <td style="border: 0 none; min-width: 115px;"><div class="form-inline"><input type="button" id="wifi2_b" class="btn btn-mini '+enabled2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_setting(2);">&nbsp;<input type="button" id="wifi5_b" style="'+style_5g+'" class="btn btn-mini '+enabled5Gclass+'" value="5G" onclick="go_setting(5);"></div></td>\n';
 	bc += '  </tr>\n';
 	bc += '  <tr>\n';
-	bc += '    <td><#menu5_1_2#>:</td>\n';
-	bc += '    <td><div class="form-inline"><input type="button" id="wifi2_b_g" class="btn btn-mini '+enabledGuest2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_wguest(2);">&nbsp;<input type="button" id="wifi5_b_g" style="'+style_5g+'" class="btn btn-mini '+enabledGuest5Gclass+'" value="5G" onclick="go_wguest(5);"></div></td>\n';
-	bc += '  </tr>\n';
-	bc += '  <tr>\n';
-	bc += '    <td><#General_x_FirmwareVersion_itemname#></td>\n';
-	bc += '    <td><a href="/Advanced_FirmwareUpgrade_Content.asp"><span id="firmver" class="time"></span></a></td>\n';
-	bc += '  </tr>\n';
+        bc += '    <td><#Service_ID#>:</td>\n';
+        bc += '    <td>'+fw_sn+'</td>\n';
+        bc += '  </tr>\n';
+        bc += '  <tr>\n';
+        bc += '    <td><#Tech_Support#></td>\n';
+        bc += '    <td><a href="http://www.techmes.cn" target="_blank"><#Tech_Support_Link#></a></td>\n';
+        bc += '  </tr>\n';
 	bc += '  <tr>\n';
 	bc += '    <td><button type="button" id="commit_btn" class="btn btn-mini" style="width: 114px; height: 21px; outline:0; '+enabledBtnCommit+'" onclick="commit();"><i class="icon icon-fire"></i>&nbsp;<#CTL_Commit#></button></td>\n';
 	bc += '    <td><button type="button" id="logout_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#t1Logout#>" onclick="logout();"><i class="icon icon-user"></i></button> <button type="button" id="reboto_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_REBOOT#>" onclick="reboot();"><i class="icon icon-repeat"></i></button> <button type="button" id="shutdown_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_SHUTDOWN#>" onclick="shutdown();"><i class="icon icon-off"></i></button></td>\n';
