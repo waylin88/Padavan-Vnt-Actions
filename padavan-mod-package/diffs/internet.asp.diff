@@ -1,0 +1,55 @@
+diff --git a/trunk/user/www/n56u_ribbon_fixed/device-map/internet.asp b/trunk/user/www/n56u_ribbon_fixed/device-map/internet.asp
+index fa1aeedb99..87c8e264b5 100644
+--- a/trunk/user/www/n56u_ribbon_fixed/device-map/internet.asp
++++ b/trunk/user/www/n56u_ribbon_fixed/device-map/internet.asp
+@@ -38,9 +38,6 @@ performance.now = (function() {
+ function initial(){
+ 	flash_button();
+ 
+-	if(!support_usb())
+-		$j("#domore")[0].remove(6);
+-
+ 	if(sw_mode == '4'){
+ 		$j("#domore")[0].remove(4);
+ 		$j("#domore")[0].remove(3);
+@@ -134,9 +131,9 @@ function fill_status(scode,wtype){
+ 
+ 	var wtext = wtype;
+ 	if(wtype == 'Automatic IP')
+-		wtext = 'IPoE: <#BOP_ctype_title1#>';
++		wtext = '<#BOP_ctype_title1#>';
+ 	else if(wtype == 'Static IP')
+-		wtext = 'IPoE: <#BOP_ctype_title5#>';
++		wtext = '<#BOP_ctype_title5#>';
+ 	$("WANType").innerHTML = wtext;
+ }
+ 
+@@ -328,7 +325,7 @@ function submitInternet(v){
+     <td colspan="2"><span id="WANBRateTX"></span></td>
+   </tr>
+   <tr>
+-    <th><#IP4_Addr#> WAN:</th>
++    <th><#WAN_IP4_Addr#>:</th>
+     <td colspan="3"><span id="WANIP4"></span></td>
+   </tr>
+   <tr id="row_man_ip4" style="display:none">
+@@ -344,7 +341,7 @@ function submitInternet(v){
+     <td colspan="3"><span id="LANIP6"></span></td>
+   </tr>
+   <tr>
+-    <th><#Gateway#> WAN:</th>
++    <th><#WAN_Gateway#>:</th>
+     <td colspan="3"><span id="WANGW4"></span></td>
+   </tr>
+   <tr id="row_man_gw4" style="display:none">
+@@ -368,10 +365,6 @@ function submitInternet(v){
+           <option value="../Advanced_IPv6_Content.asp"><#menu5_3_3#></option>
+           <option value="../Advanced_VirtualServer_Content.asp"><#menu5_3_4#></option>
+           <option value="../Advanced_Exposed_Content.asp"><#menu5_3_5#></option>
+-          <option value="../Advanced_DDNS_Content.asp"><#menu5_3_6#></option>
+-          <option value="../Advanced_Modem_others.asp"><#menu5_4_4#></option>
+-          <option value="../vpnsrv.asp"><#menu2#></option>
+-          <option value="../vpncli.asp"><#menu6#></option>
+         </select>
+     </td>
+   </tr>

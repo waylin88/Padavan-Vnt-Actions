@@ -1,0 +1,257 @@
+Padavan Web UI 完整变更清单
+============================
+
+对比分支: master (f6aab9d482)  →  trae/agent-rwINKX (74193e0b)
+目录范围: trunk/user/www/
+变更统计: 35 文件, +376 / -4334, 净减 3958 行
+
+══════════════════════════════════════════════════════════════════
+一、按类别分组
+══════════════════════════════════════════════════════════════════
+
+【顶层目录】trunk/user/www/ (1 文件)
+───────────────────────────────────────────────
+  trunk/user/www/Makefile                                  +7 / -1
+    - 版权文字更新: 2021 → 2026, 作者改为 "游灵 / techmes.cn"
+    - 新增 ROMFS 清理: Advanced_System_Info.asp
+    - 新增 OpenVPN WebUI 条件删除 (vpn_clients.asp / vpnsrv.asp / vpncli.asp)
+
+【语言包】trunk/user/www/dict/ (2 文件)
+───────────────────────────────────────────────
+  trunk/user/www/dict/CN.dict                              +19 / -13
+    - APSTA_SSID: "上级 SSID:" → "上级无线名称:"
+    - WPA-PSKKey: "WPA-PSK 密钥:" → "无线密码:"
+    - BOP_ctype_title1: "动态 IP" → "动态获得IP地址"
+    - PPPConnection_UserName_sectionname: 去掉 "PPP VPN" 前缀
+    - 新增键: WAN_IP4_Addr / LAN_IP4_Addr / WAN_Gateway / LAN_Gateway
+    - AiDisk_DDNS 链接文字简化 (去掉跳转链接)
+    
+  trunk/user/www/dict/EN.footer                            +6 / -0
+    - 新增键: WAN_IP4_Addr / LAN_IP4_Addr / WAN_Gateway / LAN_Gateway
+    - 新增键: BOP_ctype_pppoe / BOP_ctype_ipoe
+
+【已删除文件】master 有, trae 分支无 (3 文件, 全部删除)
+───────────────────────────────────────────────
+  trunk/user/www/n56u_ribbon_fixed/Advanced_DDNS_Content.asp       768 行
+  trunk/user/www/n56u_ribbon_fixed/Advanced_Scripts_Content.asp    194 行
+  trunk/user/www/n56u_ribbon_fixed/Advanced_System_Info.asp        389 行
+    合计: 1351 行
+
+【JavaScript 核心文件】(3 文件)
+───────────────────────────────────────────────
+  state.js                                                 +26 / -31
+    - tabtitle/tablink[0]/[1] 恢复 ACL 页面引用 (menu5_1_4)
+    - free_options() 增加 options==null 检查 → 防 TypeError
+    - inputCtrl() 增加 obj==null 检查
+    - 新增 set_display(id, val) 工具函数 (null 安全的 style.display)
+    - 版权年份更新相关
+    
+  wireless.js (5GHz)                                       +53 / -53
+    - automode_hint(): hint 元素 null 安全
+    - nmode_limitation(): 删除 alert 弹窗 (4 处), 仅保留自动修正
+    - wl_wep_change(): set_display + typeof(change_key_des) 检查
+    - change_wep_type(): 新增 hidden input 提前返回 → 修复 TypeError
+    - wl_auth_mode_change(): wl_key.options != null 包裹
+    
+  wireless_2g.js (2.4GHz)                                  +58 / -57
+    - 同 wireless.js 的所有改动
+    - enableExtChRows(): row_protect / row_HT_BW / row_HT_EXTCHA null 安全
+    - insertExtChannelOption(): rt_HT_EXTCHA 存在性检查
+
+【无线设置系列页面】(12 文件)
+───────────────────────────────────────────────
+  Advanced_Wireless2g_Content.asp                          +12 / -333
+  Advanced_Wireless_Content.asp                           +11 / -321
+    - 大幅精简: 删掉 WEP 相关选项和 input (row_wep1-7, row_wpa3 引用代码)
+    - 删掉 WPA-Enterprise (RADIUS) 分支代码
+    - 删掉 auth mode 选项数组中的 shared/wpa/radius 选项
+    - 删掉 country mode / channel 冗余处理
+    - 删掉 2G↔5G 切换按钮 (goto5) 及 support_5g_radio() 适配
+    - Apply 按钮居中 (text-align: center)
+    
+  Advanced_WMode2g_Content.asp                            +22 / -111
+  Advanced_WMode_Content.asp                              +21 / -105
+    - 删掉 WPA-Enterprise 分支
+    - 删掉 WEP 相关 JS 调用
+    - 删掉 2G↔5G 切换按钮
+    - Apply 按钮居中
+    
+  Advanced_WGuest2g_Content.asp                            +16 / -144
+  Advanced_WGuest_Content.asp                              +17 / -147
+    - 删掉 Guest 时间调度相关 hidden input (date_x / time_x / time2_x)
+    - 删掉 Guest 固定发射速率选项 (row_guest_9 及对应逻辑)
+    - change_guest_enabled(): 新增 else 分支显式隐藏 row_guest_11/12
+    - change_guest_auth_mode(): 新增 Guest 启用检查
+    - 删掉 2G↔5G 切换按钮, Apply 居中
+    
+  Advanced_WAdvanced2g_Content.asp                        +1 / -9
+  Advanced_WAdvanced_Content.asp                           +1 / -4
+  Advanced_WSecurity2g_Content.asp                         +1 / -9
+  Advanced_WSecurity_Content.asp                           +1 / -4
+  Advanced_ACL2g_Content.asp                               +1 / -9
+  Advanced_ACL_Content.asp                                 +1 / -4
+    - 统一模式: 删掉 2G↔5G 切换按钮, Apply 居中
+
+【WAN / DHCP / 防火墙 / 服务】(8 文件)
+───────────────────────────────────────────────
+  Advanced_WAN_Content.asp                                +15 / -548
+    - 大幅精简: 删掉 WEP 选项 / Shared Key / WPA-Enterprise / PPTP/L2TP
+    - 删掉 VLAN 配置逻辑
+    - 删掉 RADIUS 相关 (radius_ipaddr, radius_port, radius_secret)
+    - 删掉 PPPoE 额外字段 (echo / service_name / idle_timeout)
+    - 删掉静态 IP 额外字段
+    - 删掉 3G/4G USB 网卡选项
+    
+  Advanced_Services_Content.asp                           +2 / -442
+    - 删掉 SSH 服务 (dropbear) 整个 section
+    - 删掉系统日志 2,3 (远程日志服务器 / 日志文件)
+    - 删掉 NTP 服务器
+    - 删掉 Miscellaneous → 自动恢复开关
+    - 整体精简服务列表
+    
+  Advanced_DHCP_Content.asp                                +1 / -79
+    - 删掉 DHCP 域名
+    - 删掉 DNS 服务器 3 / WINS 服务器
+    - 删掉 DHCP Verbose 开关
+    
+  Advanced_System_Content.asp                              +4 / -30
+    - 删掉 DDNS 相关 section (改在单独页面 → 但该页面也被删除!)
+    
+  Advanced_IPv6_Content.asp                                +3 / -3
+    - 去掉 WAN 类型文案前缀 "BOP_ctype_ipoe: " → 纯 title
+    
+  Advanced_InetDetect_Content.asp                          +1 / -67
+    - 删掉 IPv6 检测选项
+    - 删掉自动恢复开关
+    
+  Advanced_Exposed_Content.asp                             +0 / -25
+    - 删掉 WPS 相关
+    
+  Advanced_Console_Content.asp                             +1 / -7
+    - 精简
+
+【WOL / 主页 / 设备图 / 菜单】(6 文件)
+───────────────────────────────────────────────
+  Advanced_WOL_Content.asp                                +2 / -26
+    - 删掉 macvendorlookup.com 外部 AJAX API 调用
+    - 仅使用 localStorage 本地缓存
+    
+  device-map/router.asp                                   +32 / -194
+  device-map/router2g.asp                                 +32 / -191
+    - 删掉 WEP/WPA-Enterprise 分支代码
+    - 删掉 show_key / change_key_des (原 WEP key 描述)
+    - 删掉 wl_wep_x.options / wl_key.options 重建逻辑
+    - 精简 change_auth_mode 为纯 Personal 模式
+    
+  device-map/internet.asp                                 +4 / -11
+    - 去 BOP_ctype_ipoe: 前缀
+    - 去掉 DDNS / VPN 快捷入口选项
+    
+  device-map/intranet.asp                                 +2 / -2
+    - 使用新增的语言键 LAN_IP4_Addr / LAN_Gateway (从 IP4_Addr / Gateway 改)
+    
+  index.asp                                               +3 / -3
+    - 默认状态图: clients.asp → internet.asp
+    - 图标: iconClient → iconInternet
+    
+  state.js                                                (见上方 JS 部分)
+
+══════════════════════════════════════════════════════════════════
+二、原有 Bug 及防御性修复
+══════════════════════════════════════════════════════════════════
+
+1. free_options() 在 hidden input 上报 TypeError
+   - free_options(document.form.rt_wep_x) 在 WEP 选项被移除后
+     rt_wep_x 变成 <input type=hidden>, 没有 .options 属性
+     → 原代码: selectObj.options.length → undefined.length → 报错
+   - 连锁导致 change_wep_type 报错 → wl_auth_mode_change 中断
+     → wl_wep_change / rt_wep_change 从未完整执行过
+   - 修复: free_options 加 options==null 检查; change_wep_type
+     开头加 hidden input 提前返回分支
+
+2. change_key_des() 未定义
+   - 只在 device-map/router*.asp 中定义
+   - wireless.js/2g.js 的 wl_wep_change 末尾无条件调用
+   - 原来被 Bug 1 的 TypeError 掩盖了 (还没执行到这里就报错)
+   - 修复: typeof(change_key_des) == 'function' 检查
+
+3. set_display / inputCtrl null 安全
+   - 许多页面没有 row_wpa3 / row_wep1-7 / row_protect 元素
+   - 原代码直接 $("row_xxx").style.display → 找不到元素时报错
+   - 修复: 加 null 检查
+
+══════════════════════════════════════════════════════════════════
+三、已知影响
+══════════════════════════════════════════════════════════════════
+
+1. DDNS 功能完全不可用 (Advanced_DDNS_Content.asp 被删除,
+   Advanced_System_Content.asp 中的 DDNS section 也被删除)
+2. Scripts 页面被删除 (Advanced_Scripts_Content.asp,
+   原提供自定义脚本/启动脚本功能)
+3. Advanced_System_Info.asp 被删除 (原提供系统信息页面)
+4. PPTP/L2TP WAN 协议选项被删减 (仍保留 PPPoE + Static + DHCP)
+5. OpenVPN WebUI 条件新增 (条件编译 CONFIG_FIRMWARE_INCLUDE_OPENVPN_WEBUI)
+
+══════════════════════════════════════════════════════════════════
+四、使用方法
+══════════════════════════════════════════════════════════════════
+
+  # 应用修改 (用 trae 分支版本覆盖源码)
+  cp -r padavan-full-package/modified/trunk/* trunk/
+
+  # 恢复 master 版本 (包括被删除的 3 个文件)
+  cp -r padavan-full-package/original/trunk/* trunk/
+
+  # 只看某个文件的变化
+  less padavan-full-package/diffs/wireless.js.diff
+
+  # 查看完整统一 diff
+  less padavan-full-package/padavan-full-ui-changes.diff
+
+══════════════════════════════════════════════════════════════════
+五、文件清单 (35 个差异文件)
+══════════════════════════════════════════════════════════════════
+
+【顶层 + 语言包】(3)
+  trunk/user/www/Makefile
+  trunk/user/www/dict/CN.dict
+  trunk/user/www/dict/EN.footer
+
+【已删除】(3, original 有 modified 无)
+  trunk/user/www/n56u_ribbon_fixed/Advanced_DDNS_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_Scripts_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_System_Info.asp
+
+【JS 核心】(3)
+  trunk/user/www/n56u_ribbon_fixed/state.js
+  trunk/user/www/n56u_ribbon_fixed/wireless.js
+  trunk/user/www/n56u_ribbon_fixed/wireless_2g.js
+
+【ASP 页面】(26)
+  trunk/user/www/n56u_ribbon_fixed/Advanced_ACL2g_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_ACL_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_Console_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_DHCP_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_Exposed_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_IPv6_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_InetDetect_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_Services_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_System_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WAN_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WAdvanced2g_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WAdvanced_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WGuest2g_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WGuest_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WMode2g_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WMode_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WOL_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WSecurity2g_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_WSecurity_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_Wireless2g_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/Advanced_Wireless_Content.asp
+  trunk/user/www/n56u_ribbon_fixed/device-map/internet.asp
+  trunk/user/www/n56u_ribbon_fixed/device-map/intranet.asp
+  trunk/user/www/n56u_ribbon_fixed/device-map/router.asp
+  trunk/user/www/n56u_ribbon_fixed/device-map/router2g.asp
+  trunk/user/www/n56u_ribbon_fixed/index.asp
+
