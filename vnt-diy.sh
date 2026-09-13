@@ -25,10 +25,10 @@ fi
 
 # 📍 2. Web UI (www) 增量/增补覆盖 (保留原有文件，冲突则覆盖)
 WWW_SRC=""
-if [ -d "padavan-mod-package/original/trunk/user/www" ]; then
-    WWW_SRC="padavan-mod-package/original/trunk/user/www"
-elif [ -d "build-repo/padavan-mod-package/original/trunk/user/www" ]; then
-    WWW_SRC="build-repo/padavan-mod-package/original/trunk/user/www"
+if [ -d "padavan-mod-package/modified/trunk/user/www" ]; then
+    WWW_SRC="padavan-mod-package/modified/trunk/user/www"
+elif [ -d "build-repo/padavan-mod-package/modified/trunk/user/www" ]; then
+    WWW_SRC="build-repo/padavan-mod-package/modified/trunk/user/www"
 fi
 
 if [ -n "$WWW_SRC" ]; then
