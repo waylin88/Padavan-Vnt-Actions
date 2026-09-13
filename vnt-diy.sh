@@ -52,6 +52,6 @@ echo "=========================================="
 # 5. 修改 rc.c 自动调用 system("start")
 echo ">>> 正在直接修改 rc.c: ${RC_C_PATH}"
 sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("start");' "${RC_C_PATH}"
-sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \tsystem("nvram set fw_sn=$(lan_eeprom_mac | awk '\''/MAC/ {gsub(/:/, \\"\\"); print $NF}'\'')");' "${RC_C_PATH}"
+sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("nvram set fw_sn=$(lan_eeprom_mac | awk '\''/MAC/ {gsub(/:/, \\"\\"); print $NF}'\'')");' "${RC_C_PATH}"
 echo ">>> rc.c 修改结果验证："
 grep -A 3 "// system ready" "${RC_C_PATH}"
