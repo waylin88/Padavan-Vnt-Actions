@@ -1,6 +1,7 @@
 #!/bin/sh
-sn=$(lan_eeprom_mac | awk '/MAC/ {gsub(/:/, ""); print $NF}')
-nvram set fw_sn=$sn
+# sn=$(lan_eeprom_mac | awk '/MAC/ {gsub(/:/, ""); print $NF}')
+# nvram set fw_sn=$sn
+sn=$(nvram get fw_sn)
 pwp=$(nvram get http_passwd)
 encoded=$(echo -n $pwp | base64 | tr -d '=')
 FILE="/etc/storage/vntc.ini"
