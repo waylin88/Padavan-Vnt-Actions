@@ -351,7 +351,7 @@ function show_banner(L3){
 	bc += '    <td style="border: 0 none; min-width: 115px;"><div class="form-inline"><input type="button" id="wifi2_b" class="btn btn-mini '+enabled2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_setting(2);">&nbsp;<input type="button" id="wifi5_b" style="'+style_5g+'" class="btn btn-mini '+enabled5Gclass+'" value="5G" onclick="go_setting(5);"></div></td>\n';
 	bc += '  </tr>\n';
 	bc += '  <tr>\n';
-        bc += '    <td><#Service_ID#>:</td>\n';
+        bc += '    <td><#Service_ID#></td>\n';
         bc += '    <td>'+fw_sn+'</td>\n';
         bc += '  </tr>\n';
         bc += '  <tr>\n';
