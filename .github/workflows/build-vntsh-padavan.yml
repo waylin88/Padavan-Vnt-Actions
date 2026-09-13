@@ -1,5 +1,5 @@
 name: "Padavan-VNT-脚本-Actions"
-run-name: "编译机型 [${{ github.event.inputs.target_board }}] - IP: ${{ github.event.inputs.custom_ips }}"
+run-name: "编译机型 [${{ github.event.inputs.target_board }}] - VNT_IP: ${{ github.event.inputs.custom_ip }}"
 
 on:
   workflow_dispatch:
@@ -24,9 +24,29 @@ on:
 
       custom_ips:
         type: string
-        description: '填入 IP 列表 (用逗号或空格隔开)'
+        description: '填入 LAN IP 列表 (用逗号或空格隔开)'
         required: false
         default: '10.168.1.1'
+
+      custom_token:
+        type: string
+        description: '输入自定义 Token'
+        required: false
+        default: '3316375347067009790'
+
+      custom_ip:
+        type: string
+        description: '输入 VNT 自定义 IP'
+        required: false
+        default: '10.2.0.3'
+
+      custom_in_ips:
+        type: string
+        description: '输入 in_ips 路由映射 (每行一个，格式: 网段,VNT_IP)'
+        required: false
+        default: |
+          10.168.1.0/24,10.2.0.1
+          10.168.2.0/24,10.2.0.2
 
 env:
   REPO_URL: https://github.com/waylin88/rt-n56u.git
@@ -156,6 +176,60 @@ jobs:
           else
             echo "⚠️ 警告: 未找到 $DEF_C 文件，跳过此步骤。"
           fi
+          
+      - name: 同步并动态修改vntc脚本文件
+        run: |
+          # 获取手动输入的变量
+          INPUT_TOKEN="${{ github.event.inputs.custom_token }}"
+          INPUT_IP="${{ github.event.inputs.custom_ip }}"
+          INPUT_IN_IPS="${{ github.event.inputs.custom_in_ips }}"
+          
+          echo ">>> 正在处理 vntc 脚本与路由映射..."
+          
+          # 1. 复制补丁文件到目标目录
+          TARGET_DIR="padavan-src/trunk/user/vntc"
+          mkdir -p "$TARGET_DIR"
+          if [ -d "patches/vntc" ]; then
+            cp -rf patches/vntc/* "$TARGET_DIR/"
+          elif [ -d "build-repo/patches/vntc" ]; then
+            cp -rf build-repo/patches/vntc/* "$TARGET_DIR/"
+          fi
+          
+          # 2. 定位目标脚本文件
+          SCRIPT_FILE="$TARGET_DIR/start"
+          [ ! -f "$SCRIPT_FILE" ] && SCRIPT_FILE="$TARGET_DIR/vntc.sh"
+          
+          # 3. 替换 Token
+          if [ -n "$INPUT_TOKEN" ]; then
+            echo ">>> 正在替换 Token..."
+            sed -i -E "s/^token: .*/token: ${INPUT_TOKEN}/g" "$SCRIPT_FILE"
+          fi
+          
+          # 4. 替换 IP
+          if [ -n "$INPUT_IP" ]; then
+            echo ">>> 正在替换 IP: $INPUT_IP"
+            sed -i -E "s/^ip: .*/ip: ${INPUT_IP}/g" "$SCRIPT_FILE"
+          fi
+          
+          # 5. 替换 in_ips (支持多行替换)
+          if [ -n "$INPUT_IN_IPS" ]; then
+            echo ">>> 正在替换 in_ips 路由映射..."
+            # 使用 awk 替换 in_ips 块：找到 in_ips: 后，删除旧的 - 行，直到遇到下一个非缩进键
+            awk -v ips="$INPUT_IN_IPS" '
+              /^in_ips:/ { 
+                print; 
+                print ips; 
+                in_block=1; 
+                next 
+              } 
+              in_block && /^[[:space:]]*- / { next } 
+              in_block && !/^[[:space:]]/ { in_block=0 } 
+              { print }
+            ' "$SCRIPT_FILE" > "${SCRIPT_FILE}.tmp" && mv "${SCRIPT_FILE}.tmp" "$SCRIPT_FILE"
+          fi
+          
+          echo ">>> 修改后的脚本配置预览："
+          cat "$SCRIPT_FILE"          
           
           
       # 6. 执行 Padavan 编译
