@@ -60,6 +60,6 @@ grep -A 3 "// system ready" "${RC_C_PATH}"
 
 echo ">>> 正在直接修改 net_wan.c: ${SRC_DIR}/trunk/user/rc/net_wan.c"
 # 精准插入：在 doSystem("%s %s %s %s", script_postw... 行下方追加带 Tab 缩进的 system("vnt auto");
-sed -i '/doSystem("%s %s %s %s", script_postw/a \\tsystem("vnt auto");' "${SRC_DIR}/trunk/user/rc/net_wan.c"
+sed -i '/\/\* call custom user script \*\//,/doSystem/ { /doSystem/a \\tsystem("vnt auto"); }' "${SRC_DIR}/trunk/user/rc/net_wan.c"
 echo ">>> net_wan.c 修改结果验证："
 grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
