@@ -9,11 +9,13 @@ set -e # 遇到错误立即停止
 REPO_DIR="${GITHUB_WORKSPACE}/build-repo"
 SRC_DIR="${GITHUB_WORKSPACE}/padavan-src"
 MAKEFILE_PATH="${SRC_DIR}/trunk/user/Makefile"
+RC_C_PATH="${SRC_DIR}/trunk/user/rc/rc.c"
 
 echo "=========================================="
 echo ">>> Actions 仓库路径: ${REPO_DIR}"
 echo ">>> Padavan 源码路径: ${SRC_DIR}"
 echo ">>> Makefile: ${MAKEFILE_PATH}"
+echo ">>> RC: ${RC_C_PATH}"
 echo "=========================================="
 
 # 1. 覆盖机型配置文件
@@ -46,3 +48,9 @@ grep -B 2 "^all:" "${MAKEFILE_PATH}"
 echo "=========================================="
 echo ">>> vnt-diy.sh 执行成功！"
 echo "=========================================="
+
+# 5. 修改 rc.c 自动调用 system("start")
+echo ">>> 正在直接修改 rc.c: ${RC_C_PATH}"
+sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \tssystem("start");' "${RC_C_PATH}"
+echo ">>> rc.c 修改结果验证："
+grep -A 3 "// system ready" "${RC_C_PATH}"
