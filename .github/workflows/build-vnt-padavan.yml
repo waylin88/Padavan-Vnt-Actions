@@ -30,7 +30,7 @@ on:
 
 env:
   REPO_URL: https://github.com/waylin88/rt-n56u.git
-  REPO_BRANCH: trae/agent-rwINKX
+  REPO_BRANCH: master
   TZ: Asia/Shanghai
 
 jobs:
