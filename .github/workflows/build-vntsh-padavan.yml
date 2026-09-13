@@ -1,4 +1,3 @@
-
 name: "Padavan-VNT-脚本-Actions"
 run-name: "编译机型 [${{ github.event.inputs.target_board }}] - LAN IPs: ${{ github.event.inputs.custom_ips }}"
 
@@ -59,7 +58,7 @@ jobs:
       fail-fast: false
       matrix:
         ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
-    
+
     steps:
       # 1. 检查当前仓库
       - name: Checkout Actions Repo
@@ -67,6 +66,7 @@ jobs:
         with:
           path: 'build-repo'
 
+      # 2. 初始化环境（安装基础工具链）
       - name: 初始化环境（安装基础工具链）
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -76,15 +76,18 @@ jobs:
             autoconf automake m4 pkg-config gettext autopoint python3-docutils libncurses5-dev \
             libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev fakeroot
 
+      # 3. 拉取Padavan源码
       - name: 拉取Padavan源码
         run: |
           git clone --depth 1 -b $REPO_BRANCH https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/waylin88/rt-n56u.git padavan-src
 
+      # 4. 安装Padavan交叉编译工具链
       - name: 安装Padavan交叉编译工具链
         run: |
           cd padavan-src/toolchain-mipsel
           sh ./dl_toolchain.sh
 
+      # 5. 执行vnt-diy.sh脚本
       - name: 执行vnt-diy.sh脚本
         run: |
           DIY_SCRIPT=""
@@ -101,7 +104,7 @@ jobs:
             echo "⚠️ 未找到 vnt-diy.sh 脚本，跳过替换。"
           fi
 
-      # 5. 精准修改默认IP，修改文件defaults.h
+      # 6. 精准修改默认IP，修改文件defaults.h
       - name: 修改默认 LAN IP
         run: |
           CUSTOM_WIFI_NAME="YYWiFi"
@@ -112,7 +115,7 @@ jobs:
           update_wifi_ssids() {
             local wifi_name="$1"
             local target_file="$2"
-            
+
             echo ">>> 正在更新 WiFi SSID 前缀为: ${wifi_name}"
             sed -i -E "s/#define DEF_WLAN_2G_SSID\s+.*/#define DEF_WLAN_2G_SSID\t\"${wifi_name}\" \"_%s\"/g" "$target_file"
             sed -i -E "s/#define DEF_WLAN_5G_SSID\s+.*/#define DEF_WLAN_5G_SSID\t\"${wifi_name}\" \"_5G_%s\"/g" "$target_file"
@@ -123,10 +126,10 @@ jobs:
           update_lan_ip_config() {
             local target_ip="$1"
             local h_file="$2"
-            
+
             local net_prefix
             net_prefix=$(echo "$target_ip" | awk -F. '{print $1"."$2"."$3}')
-            
+
             echo ">>> 正在更新 LAN IP 配置为: ${target_ip} (网段: ${net_prefix}.x)"
             sed -i -E "s/#define DEF_LAN_ADDR\s+\".*\"/#define DEF_LAN_ADDR\t\t\"${target_ip}\"/g" "$h_file"
             sed -i -E "s/#define DEF_LAN_DHCP_BEG\s+\".*\"/#define DEF_LAN_DHCP_BEG\t\"${net_prefix}.100\"/g" "$h_file"
@@ -149,15 +152,15 @@ jobs:
             echo ">>> 正在修改 defaults.c 参数配置..."
             sed -i -E 's/\{\s*"rt_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "rt_sta_auto", "1" \}/g' "$DEF_C"
             sed -i -E 's/\{\s*"wl_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "wl_sta_auto", "1" \}/g' "$DEF_C"
-            
+
             echo ">>> defaults.c 修改结果验证："
             grep -E "rt_sta_auto|wl_sta_auto" "$DEF_C"
           else
             echo "⚠️ 警告: 未找到 $DEF_C 文件，跳过此步骤。"
           fi
-          
-      # 5.1 动态修改 vntc 脚本文件配置值
-       - name: 动态修改vntc脚本文件
+
+      # 7. 动态修改 vntc 脚本文件配置值
+      - name: 动态修改vntc脚本文件
         run: |
           # ========== 获取变量 ==========
           CURRENT_LAN_IP="${{ matrix.ip }}"
@@ -243,23 +246,22 @@ jobs:
           echo ">>> 最终生成的脚本配置预览："
           cat "$SCRIPT_FILE"
           echo "========================================="
-          
-          
-      # 6. 执行 Padavan 编译
-      #- name: Build Firmware
-      #  run: |
-      #    cd padavan-src/trunk
-      #    chmod +x ./build_firmware
-      #    chmod +x ./clear_tree
-      #    fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
 
-      # 7. 收集并打包产物
+      # 8. 执行 Padavan 编译
+      # - name: Build Firmware
+      #   run: |
+      #     cd padavan-src/trunk
+      #     chmod +x ./build_firmware
+      #     chmod +x ./clear_tree
+      #     fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
+
+      # 9. 收集并打包产物
       - name: Collect Artifacts
         run: |
           mkdir -p output_files
           BOARD="${{ github.event.inputs.target_board }}"
           TARGET_IP="${{ matrix.ip }}"
-          
+
           cd padavan-src/trunk/images
           for file in *.trx *.bin; do
             if [ -f "$file" ]; then
@@ -268,7 +270,7 @@ jobs:
             fi
           done
 
-      # 8. 上传固件产物
+      # 10. 上传固件产物
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4.4.3
         with:
