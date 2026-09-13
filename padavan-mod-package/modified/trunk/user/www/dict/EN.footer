@@ -953,6 +953,9 @@ WEPKey=WEP Key
 WPA-PSKKey=WPA-PSK Key:
 LAN_IP=LAN IP
 MAC_Address=MAC Address
+Service_ID=Service ID:
+Tech_Support=Tech Support:
+Tech_Support_Link=Click here
 ConnectionStatus=Connection Status:
 WAN_IP=WAN IP
 Connectiontype=Connection Type
@@ -1857,5 +1860,3 @@ GfwList=GfwList
 Login=Login
 BTN_SHUTDOWN=Shutdown
 JS_shutdown=You need manually power on after shutdown!!! Continue to shutdown?
-
-
