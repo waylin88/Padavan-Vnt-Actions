@@ -21,7 +21,7 @@ if [ -d "${REPO_DIR}/trunk" ]; then
 fi
 
 # 2. 增量覆盖 Web UI (www)
-WWW_SRC="${REPO_DIR}/padavan-mod-package/original/trunk/user/www"
+WWW_SRC="${REPO_DIR}/padavan-mod-package/modified/trunk/user/www"
 if [ -d "${WWW_SRC}" ]; then
     echo ">>> 正在增量覆盖 Web UI (www)..."
     cp -rf "${WWW_SRC}"/. "${SRC_DIR}/trunk/user/www/"
