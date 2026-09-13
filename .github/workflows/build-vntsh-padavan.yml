@@ -68,8 +68,7 @@ jobs:
         with:
           path: 'build-repo'
 
-      # 2. 初始化环境（安装基础工具链）
-      - name: Prepare Toolchain Environment
+      - name: 初始化环境（安装基础工具链）
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -78,13 +77,16 @@ jobs:
             autoconf automake m4 pkg-config gettext autopoint python3-docutils libncurses5-dev \
             libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev fakeroot
 
-      # 3. 克隆 hanwckf Padavan 源码
       - name: 拉取Padavan源码
         run: |
           git clone --depth 1 -b $REPO_BRANCH https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/waylin88/rt-n56u.git padavan-src
 
-      # 📍 3.1 核心改动：在拉取源码后立即调用根目录下的 vnt-diy.sh
-      - name: 执行自定义文件替换脚本 (vnt-diy.sh)
+      - name: 安装Padavan交叉编译工具链
+        run: |
+          cd padavan-src/toolchain-mipsel
+          sh ./dl_toolchain.sh
+
+      - name: 执行vnt-diy.sh脚本
         run: |
           DIY_SCRIPT=""
           if [ -f "vnt-diy.sh" ]; then
@@ -99,12 +101,6 @@ jobs:
           else
             echo "⚠️ 未找到 vnt-diy.sh 脚本，跳过替换。"
           fi
-
-      # 4. 下载交叉编译工具链
-      - name: Prepare Toolchain
-        run: |
-          cd padavan-src/toolchain-mipsel
-          sh ./dl_toolchain.sh
 
       # 5. 精准修改默认IP，修改文件defaults.h
       - name: 修改默认 LAN IP
@@ -161,51 +157,6 @@ jobs:
             echo "⚠️ 警告: 未找到 $DEF_C 文件，跳过此步骤。"
           fi
           
-      # 5.1 同步并动态修改 vntc 脚本文件
-      - name: 同步并动态修改vntc脚本文件
-        run: |
-          TARGET_IP="${{ matrix.ip }}"
-          ALL_IPS="${{ github.event.inputs.custom_ips }}"
-          
-          echo ">>> 正在处理 vntc 脚本与路由映射..."
-          
-          mkdir -p padavan-src/trunk/user/vntc
-          if [ -d "patches/vntc" ]; then
-            cp -rf patches/vntc/* padavan-src/trunk/user/vntc/
-          elif [ -d "build-repo/patches/vntc" ]; then
-            cp -rf build-repo/patches/vntc/* padavan-src/trunk/user/vntc/
-          fi
-          
-          SCRIPT_FILE="padavan-src/trunk/user/vntc/start"
-          [ ! -f "$SCRIPT_FILE" ] && SCRIPT_FILE="padavan-src/trunk/user/vntc/vntc.sh"
-          
-          if [ -f "$SCRIPT_FILE" ] && [ "$TARGET_IP" != "default" ]; then
-            SUBNET_INDEX=$(echo "$TARGET_IP" | awk -F. '{print $(NF-1)}')
-            CURRENT_VNT_IP="10.2.0.${SUBNET_INDEX}"
-            
-            echo "当前 LAN IP: $TARGET_IP -> 转换 VNT IP: $CURRENT_VNT_IP"
-            sed -i -E "s/ip: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/ip: ${CURRENT_VNT_IP}/g" "$SCRIPT_FILE"
-            
-            TMP_IPS_FILE=$(mktemp)
-            for raw_ip in $(echo "$ALL_IPS" | tr ',' ' '); do
-              ip_item=$(echo "$raw_ip" | xargs)
-              if [ -n "$ip_item" ] && [ "$ip_item" != "$TARGET_IP" ]; then
-                other_idx=$(echo "$ip_item" | awk -F. '{print $(NF-1)}')
-                other_segment=$(echo "$ip_item" | sed -E 's/\.[0-9]+$/\.0\/24/')
-                other_vnt="10.2.0.${other_idx}"
-                echo "  - ${other_segment},${other_vnt}" >> "$TMP_IPS_FILE"
-              fi
-            done
-            
-            if [ -s "$TMP_IPS_FILE" ]; then
-              sed -i '/^in_ips:/,/^[a-zA-Z0-9_]/{ /^in_ips:/! { /^\s*- /d } }' "$SCRIPT_FILE"
-              sed -i "/^in_ips:/r $TMP_IPS_FILE" "$SCRIPT_FILE"
-            fi
-            rm -f "$TMP_IPS_FILE"
-            
-            echo ">>> 修改后的脚本配置预览："
-            cat "$SCRIPT_FILE"
-          fi
           
       # 6. 执行 Padavan 编译
       #- name: Build Firmware
