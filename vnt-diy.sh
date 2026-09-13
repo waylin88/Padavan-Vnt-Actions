@@ -20,46 +20,35 @@ echo "=========================================="
 
 # 1. 覆盖机型配置文件
 if [ -d "${REPO_DIR}/trunk" ]; then
-    echo ">>> 正在覆盖 trunk 配置文件..."
     cp -rf "${REPO_DIR}/trunk"/* "${SRC_DIR}/trunk/"
 fi
 
 # 2. 增量覆盖 Web UI (www)
 WWW_SRC="${REPO_DIR}/padavan-mod-package/modified/trunk/user/www"
 if [ -d "${WWW_SRC}" ]; then
-    echo ">>> 正在增量覆盖 Web UI (www)..."
     cp -rf "${WWW_SRC}"/. "${SRC_DIR}/trunk/user/www/"
 fi
 
 # 3. 拷贝 VNTC 模块
 VNTC_SRC="${REPO_DIR}/patches/vntc"
 if [ -d "${VNTC_SRC}" ]; then
-    echo ">>> 正在拷贝 VNTC 模块..."
     mkdir -p "${SRC_DIR}/trunk/user/vntc"
     cp -rf "${VNTC_SRC}"/* "${SRC_DIR}/trunk/user/vntc/"
     chmod -R +x "${SRC_DIR}/trunk/user/vntc/"
 fi
 # 4. 修改 Makefile 添加 vntc 编译项
-echo ">>> 正在直接修改 Makefile: ${MAKEFILE_PATH}"
 sed -i '/^all:/i dir_$(CONFIG_FIRMWARE_INCLUDE_VNT)\t\t+= vntc' "${MAKEFILE_PATH}"
-
-echo ">>> Makefile 修改结果验证："
 grep -B 2 "^all:" "${MAKEFILE_PATH}"
 echo "=========================================="
 echo ">>> vnt-diy.sh 执行成功！"
 echo "=========================================="
 
 # 5. 修改 rc.c 自动调用 system("start")
-echo ">>> 正在直接修改 rc.c: ${RC_C_PATH}"
 sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("start");' "${RC_C_PATH}"
 sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("nvram set fw_sn=$(lan_eeprom_mac | awk '\''/MAC/ {gsub(/:/, \\"\\"); print $NF}'\'')");' "${RC_C_PATH}"
-echo ">>> rc.c 修改结果验证："
 grep -A 3 "// system ready" "${RC_C_PATH}"
 
 # 8. 修改 net_wan.c 自动调用 system("vnt auto");
-
-echo ">>> 正在直接修改 net_wan.c: ${SRC_DIR}/trunk/user/rc/net_wan.c"
 # 精准插入：在 doSystem("%s %s %s %s", script_postw... 行下方追加带 Tab 缩进的 system("vnt auto");
 sed -i '/doSystem("%s %s %s %s", script_postw, "up"/a \\tsystem("vnt auto");' "${SRC_DIR}/trunk/user/rc/net_wan.c"
-echo ">>> net_wan.c 修改结果验证："
 grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
