@@ -62,7 +62,7 @@ jobs:
     steps:
       # 1. 检查当前仓库
       - name: Checkout Actions Repo
-        uses: actions/checkout@v4.5.0
+        uses: actions/checkout@v4.2.2
         with:
           path: 'build-repo'
 
