@@ -109,9 +109,10 @@ if [ "${TARGET_BOARD}" = "JSH-03" ]; then
     grep -A 3 "cpu_gpio_mode_set_bit(34, 1)" "${RC_C_PATH}"
 fi
 
+# 屏蔽 BusyBox DHCPv6 的日志噪音
+echo ">>> 屏蔽 BusyBox DHCPv6 日志噪音"
 sed -i 's/bb_info_msg("status code for/if (0) bb_info_msg("status code for/' \
-trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_ia.c
-
+    "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_ia.c"
 sed -i 's/bb_info_msg("unexpected DHCP6 option/if (0) bb_info_msg("unexpected DHCP6 option/' \
-trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_common.c
+    "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_common.c"
 
