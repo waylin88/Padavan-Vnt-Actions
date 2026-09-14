@@ -308,6 +308,7 @@ jobs:
               NEW_NAME="${PREFIX}-VNT-${TARGET_IP}.trx"
               
               echo ">>> 处理固件文件: $file -> $NEW_NAME"
+              cp -v "$file" "${GITHUB_WORKSPACE}/output_files/${NEW_NAME}"
 
               # 4. 远程创建目录（目录存在时不报错）
               ssh -o StrictHostKeyChecking=no -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "mkdir -p '$REMOTE_PATH'"
@@ -338,6 +339,6 @@ jobs:
             - **目标机型**: ${{ github.event.inputs.target_board }}
             - **VNT Token**: ${{ github.event.inputs.custom_token }}
             - **构建时间**: ${{ github.event.repository.updated_at }}
-          files: padavan-src/trunk/images/*.trx
+          files: output_files/*.trx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
