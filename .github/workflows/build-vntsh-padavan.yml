@@ -27,7 +27,7 @@ on:
         type: string
         description: '输入 VNT Token (同一批编译统一使用)'
         required: true
-        default: '3316375347067009790'
+        default: ''
 
 env:
   REPO_URL: https://github.com/waylin88/rt-n56u.git
