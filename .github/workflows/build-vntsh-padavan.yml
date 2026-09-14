@@ -303,6 +303,10 @@ jobs:
               fi
             fi
           done
+          
+          # 6. 清理临时密钥
+          rm -f ~/.ssh/id_rsa
+          
       # 10. 上传产物到 GitHub Release
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -318,6 +322,3 @@ jobs:
           files: ${{ env.FIRMWARE_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # 6. 清理临时密钥
-          rm -f ~/.ssh/id_rsa
