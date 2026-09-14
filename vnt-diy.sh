@@ -84,7 +84,7 @@ grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
 # 按机型执行专用补丁
 if [ "${TARGET_BOARD}" = "JSH-03" ]; then
     echo ">>> 应用 JSH-03 组网盒子亮灯补丁"
-    sed -i '/cpu_gpio_set_pin(gpio_led, flag);/i \t\tcpu_gpio_mode_set_bit(34, 1);' "${RC_C_PATH}"
+    sed -i '/cpu_gpio_set_pin(gpio_led, flag);/i\        cpu_gpio_mode_set_bit(34, 1);' "${RC_C_PATH}"
     echo ">>> 查看补丁修复结果:"
     grep -A 3 "cpu_gpio_mode_set_bit(34, 1)" "${RC_C_PATH}"
 fi
