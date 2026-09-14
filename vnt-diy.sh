@@ -52,3 +52,4 @@ grep -A 3 "// system ready" "${RC_C_PATH}"
 # 精准插入：在 doSystem("%s %s %s %s", script_postw... 行下方追加带 Tab 缩进的 system("vnt auto");
 sed -i '/doSystem("%s %s %s %s", script_postw, "up"/a \\tsystem("vnt auto");' "${SRC_DIR}/trunk/user/rc/net_wan.c"
 grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
+# 测试功能
