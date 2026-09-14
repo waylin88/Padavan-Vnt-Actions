@@ -312,12 +312,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          name: "Padavan Firmware - VNT Token: ${{ env.VNT_TOKEN }}"
+          name: "Padavan Firmware - VNT Token:  ${INPUT_TOKEN}"
           body: |
             ### 固件发布说明
             - **目标机型**: ${{ github.event.inputs.target_board }}
             - **目标 IP**: ${{ matrix.ip }}
-            - **VNT Token**: `${{ env.VNT_TOKEN }}`
+            - **VNT Token**: ${{ github.event.inputs.custom_token }}
             - **构建时间**: ${{ github.event.repository.updated_at }}
           files: ${{ env.FIRMWARE_PATH }}
         env:
