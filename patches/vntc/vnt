@@ -30,7 +30,6 @@ iptadd() {
     while ! ping -c 1 -W 2 10.2.2.1 >/dev/null 2>&1; do
         retry=$((retry + 1))
         if [ "$retry" -ge "$max_retry" ]; then
-            logger -t "异地组网" "警告: 无法连通 10.2.2.1，放弃添加 NAT 规则 (防止系统卡死)。"
             return 1
         fi
         sleep 10
@@ -59,9 +58,9 @@ check_status() {
         ip=$(ifconfig vnt-tun 2>/dev/null | awk -F '[: ]+' '/inet addr/{print $4}')
         logger -t "异地组网" "启动成功，服务ID：$sn；本地虚拟IP地址：${ip:-未知}"
         logger -t "异地组网" "启动守护程序。"
+        sleep 3
         crontab
-        # 将网络探测与防火墙添加放进后台子进程运行，决不阻塞主流程
-        iptadd &
+        iptadd
     else
         logger -t "异地组网" "启动失败，等待10分钟后由计划任务重新执行"
         crontab
