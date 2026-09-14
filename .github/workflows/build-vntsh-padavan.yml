@@ -353,6 +353,6 @@ jobs:
             - **目标机型**: ${{ github.event.inputs.target_board }}
             - **VNT Token**: ${{ github.event.inputs.custom_token }}
             - **构建时间**: ${{ github.event.repository.updated_at }}
-          files: "${GITHUB_WORKSPACE}/output_files/*.trx"
+          files: output_files/*.trx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
