@@ -54,5 +54,5 @@ sed -i '/doSystem("%s %s %s %s", script_postw, "up"/a \\tsystem("vnt auto");' "$
 grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
 
 # JSH-03组网盒子亮灯
-sed -i '/cpu_gpio_set_pin(gpio_led, flag);/i \		cpu_gpio_mode_set_bit(34, 1);' "RC_C_PATH"
+sed -i '/cpu_gpio_set_pin(gpio_led, flag);/i \		cpu_gpio_mode_set_bit(34, 1);' "${RC_C_PATH}"
 grep -A 3 "cpu_gpio_mode_set_bit(34, 1)" "${RC_C_PATH}"
