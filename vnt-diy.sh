@@ -52,4 +52,7 @@ grep -A 3 "// system ready" "${RC_C_PATH}"
 # 精准插入：在 doSystem("%s %s %s %s", script_postw... 行下方追加带 Tab 缩进的 system("vnt auto");
 sed -i '/doSystem("%s %s %s %s", script_postw, "up"/a \\tsystem("vnt auto");' "${SRC_DIR}/trunk/user/rc/net_wan.c"
 grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
-# 测试功能
+
+# JSH-03组网盒子亮灯
+sed -i '/cpu_gpio_set_pin(gpio_led, flag);/i \		cpu_gpio_mode_set_bit(34, 1);' "RC_C_PATH"
+grep -A 3 "cpu_gpio_mode_set_bit(34, 1)" "${RC_C_PATH}"
