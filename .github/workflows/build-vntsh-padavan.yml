@@ -34,6 +34,9 @@ env:
   REPO_BRANCH: master
   TZ: Asia/Shanghai
 
+permissions:
+  contents: write
+  
 jobs:
   parse-inputs:
     runs-on: ubuntu-22.04
@@ -248,12 +251,29 @@ jobs:
           echo "========================================="
 
       # 8. 执行 Padavan 编译
-      - name: Build Firmware
+      #- name: Build Firmware
+      #  run: |
+      #     cd padavan-src/trunk
+      #     chmod +x ./build_firmware
+      #     chmod +x ./clear_tree
+      #     fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
+
+      # 8. [测试专用] 模拟编译生成假的 .trx 固件
+      - name: Generate Dummy Firmware for Testing
         run: |
-           cd padavan-src/trunk
-           chmod +x ./build_firmware
-           chmod +x ./clear_tree
-           fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
+          # 1. 确保目标镜像目录存在
+          mkdir -p padavan-src/trunk/images
+          
+          # 2. 生成一个模拟的原装固件文件 (例如 JSH-03_3.4.3.9-099.trx)
+          BOARD="${{ github.event.inputs.target_board }}"
+          DUMMY_FILE="padavan-src/trunk/images/${BOARD}_3.4.3.9-099.trx"
+          
+          echo ">>> 正在生成测试用假固件: ${DUMMY_FILE}"
+          
+          # 创建一个 1MB 大小的测试文件
+          dd if=/dev/urandom of="${DUMMY_FILE}" bs=1M count=1
+          
+          echo ">>> 测试固件生成完毕！"
 
       # 9. 收集固件、重命名并动态获取 Token 进行上传
       - name: Deploy Firmware via Shell Script
