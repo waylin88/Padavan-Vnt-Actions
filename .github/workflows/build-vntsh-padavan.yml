@@ -331,14 +331,13 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "Padavan_${{ github.event.inputs.target_board }}_${{ github.event.inputs.custom_token }}"
-          name: "Padavan Firmware - VNT Token:  ${INPUT_TOKEN}"
+          tag_name: "Padavan_VNT_${{ github.event.inputs.custom_token }}"
+          name: "Padavan-VNT Token: ${{ github.event.inputs.custom_token }}"
           body: |
             ### 固件发布说明
             - **目标机型**: ${{ github.event.inputs.target_board }}
-            - **目标 IP**: ${{ matrix.ip }}
             - **VNT Token**: ${{ github.event.inputs.custom_token }}
             - **构建时间**: ${{ github.event.repository.updated_at }}
-          files: ${{ env.FIRMWARE_PATH }}
+          files: padavan-src/trunk/images/*.trx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
