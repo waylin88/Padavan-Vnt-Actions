@@ -69,7 +69,6 @@ jobs:
         with:
           path: 'build-repo'
 
-      # 2. 初始化环境（安装基础工具链）
       - name: 初始化环境（安装基础工具链）
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -79,19 +78,18 @@ jobs:
             autoconf automake m4 pkg-config gettext autopoint python3-docutils libncurses5-dev \
             libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev fakeroot
 
-      # 3. 拉取Padavan源码
       - name: 拉取Padavan源码
         run: |
           git clone --depth 1 -b $REPO_BRANCH https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/waylin88/rt-n56u.git padavan-src
 
-      # 4. 安装Padavan交叉编译工具链
       - name: 安装Padavan交叉编译工具链
         run: |
           cd padavan-src/toolchain-mipsel
           sh ./dl_toolchain.sh
 
-      # 5. 执行vnt-diy.sh脚本
       - name: 执行vnt-diy.sh脚本
+        env:
+          TARGET_BOARD: ${{ github.event.inputs.target_board }}
         run: |
           DIY_SCRIPT=""
           if [ -f "vnt-diy.sh" ]; then
@@ -110,21 +108,8 @@ jobs:
       # 6. 精准修改默认IP，修改文件defaults.h
       - name: 修改默认 LAN IP
         run: |
-          CUSTOM_WIFI_NAME="YYWiFi"
           TARGET_IP="${{ matrix.ip }}"
           DEF_H="padavan-src/trunk/user/shared/defaults.h"
-          DEF_C="padavan-src/trunk/user/shared/defaults.c"
-
-          update_wifi_ssids() {
-            local wifi_name="$1"
-            local target_file="$2"
-
-            echo ">>> 正在更新 WiFi SSID 前缀为: ${wifi_name}"
-            sed -i -E "s/#define DEF_WLAN_2G_SSID\s+.*/#define DEF_WLAN_2G_SSID\t\"${wifi_name}\" \"_%s\"/g" "$target_file"
-            sed -i -E "s/#define DEF_WLAN_5G_SSID\s+.*/#define DEF_WLAN_5G_SSID\t\"${wifi_name}\" \"_5G_%s\"/g" "$target_file"
-            sed -i -E "s/#define DEF_WLAN_2G_GSSID\s+.*/#define DEF_WLAN_2G_GSSID\t\"${wifi_name}\" \"_GUEST_%s\"/g" "$target_file"
-            sed -i -E "s/#define DEF_WLAN_5G_GSSID\s+.*/#define DEF_WLAN_5G_GSSID\t\"${wifi_name}\" \"_GUEST_5G_%s\"/g" "$target_file"
-          }
 
           update_lan_ip_config() {
             local target_ip="$1"
@@ -140,26 +125,14 @@ jobs:
           }
 
           if [ -f "$DEF_H" ]; then
-            update_wifi_ssids "$CUSTOM_WIFI_NAME" "$DEF_H"
             if [ "$TARGET_IP" != "default" ]; then
               update_lan_ip_config "$TARGET_IP" "$DEF_H"
             fi
-            echo ">>> defaults.h 修改结果验证："
-            grep -E "DEF_WLAN_|DEF_LAN_" "$DEF_H"
+            echo ">>> defaults.h LAN 修改结果验证："
+            grep -E "DEF_LAN_" "$DEF_H"
           else
             echo "❌ 错误: 未找到 $DEF_H 文件！"
             exit 1
-          fi
-
-          if [ -f "$DEF_C" ]; then
-            echo ">>> 正在修改 defaults.c 参数配置..."
-            sed -i -E 's/\{\s*"rt_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "rt_sta_auto", "1" \}/g' "$DEF_C"
-            sed -i -E 's/\{\s*"wl_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "wl_sta_auto", "1" \}/g' "$DEF_C"
-
-            echo ">>> defaults.c 修改结果验证："
-            grep -E "rt_sta_auto|wl_sta_auto" "$DEF_C"
-          else
-            echo "⚠️ 警告: 未找到 $DEF_C 文件，跳过此步骤。"
           fi
 
       # 7. 动态修改 vntc 脚本文件配置值
@@ -251,31 +224,14 @@ jobs:
           echo "========================================="
 
       # 8. 执行 Padavan 编译
-      #- name: Build Firmware
-      #  run: |
-      #     cd padavan-src/trunk
-      #     chmod +x ./build_firmware
-      #     chmod +x ./clear_tree
-      #     fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
-
-      # 8. [测试专用] 模拟编译生成假的 .trx 固件
-      - name: Generate Dummy Firmware for Testing
+      - name: Build Firmware
         run: |
-          # 1. 确保目标镜像目录存在
-          mkdir -p padavan-src/trunk/images
-          
-          # 2. 生成一个模拟的原装固件文件 (例如 JSH-03_3.4.3.9-099.trx)
-          BOARD="${{ github.event.inputs.target_board }}"
-          DUMMY_FILE="padavan-src/trunk/images/${BOARD}_3.4.3.9-099.trx"
-          
-          echo ">>> 正在生成测试用假固件: ${DUMMY_FILE}"
-          
-          # 创建一个 1MB 大小的测试文件
-          dd if=/dev/urandom of="${DUMMY_FILE}" bs=1M count=1
-          
-          echo ">>> 测试固件生成完毕！"
+           cd padavan-src/trunk
+           chmod +x ./build_firmware
+           chmod +x ./clear_tree
+           fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
 
-      #收 9. 编译完成后统一修改固件名称并集产物
+      # 9. 编译完成后统一修改固件名称并集产物
       - name: Rename Firmware Files
         run: |
           TARGET_IP="${{ matrix.ip }}"
@@ -288,7 +244,7 @@ jobs:
           firmware_files=(*.trx)
 
           if [ "${#firmware_files[@]}" -eq 0 ]; then
-            echo "❌ 错误: 未找到 .trx 固件文件！"
+            echo "错误: 未找到 .trx 固件文件！"
             exit 1
           fi
 
