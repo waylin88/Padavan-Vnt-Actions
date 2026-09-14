@@ -303,6 +303,21 @@ jobs:
               fi
             fi
           done
+      # 10. 上传产物到 GitHub Release
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: "Padavan Firmware - VNT Token: ${{ env.VNT_TOKEN }}"
+          body: |
+            ### 固件发布说明
+            - **目标机型**: ${{ github.event.inputs.target_board }}
+            - **目标 IP**: ${{ matrix.ip }}
+            - **VNT Token**: `${{ env.VNT_TOKEN }}`
+            - **构建时间**: ${{ github.event.repository.updated_at }}
+          files: ${{ env.FIRMWARE_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # 6. 清理临时密钥
           rm -f ~/.ssh/id_rsa
