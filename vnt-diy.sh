@@ -60,9 +60,30 @@ sed -i -E "s/#define DEF_WLAN_5G_GSSID\s+.*/#define DEF_WLAN_5G_GSSID\t\"${CUSTO
 grep -E "DEF_WLAN_" "${DEFAULTS_H_PATH}"
 
 echo ">>> 正在修改 defaults.c 参数配置..."
-sed -i -E 's/\{\s*"rt_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "rt_sta_auto", "1" \}/g' "${DEFAULTS_C_PATH}"
-sed -i -E 's/\{\s*"wl_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "wl_sta_auto", "1" \}/g' "${DEFAULTS_C_PATH}"
-grep -E "rt_sta_auto|wl_sta_auto" "${DEFAULTS_C_PATH}"
+DEFAULT_SETTINGS=(
+    "rt_sta_auto=1"
+    "wl_sta_auto=1"
+    "fw_enable_x=0"
+    "wl_wme=0"
+    "rt_wme=0"
+    "ip6_service=dhcp6"
+    "ip6_ppe_on=1"
+    "ip6_dns_auto=1"
+    "ip6_lan_auto=1"
+    "ip6_lan_addr=fc00:101:101::1"
+    "ip6_lan_radv=0"
+    "telnetd=1"
+    "sshd_enable=0"
+    "lltd_enable=0"
+    "help_enable=0"
+)
+
+for setting in "${DEFAULT_SETTINGS[@]}"; do
+    key="${setting%%=*}"
+    value="${setting#*=}"
+    sed -i -E "s|(^[[:space:]]*\{[[:space:]]*\"${key}\"[[:space:]]*,[[:space:]]*\")[^\"]*(\"[[:space:]]*\},.*$)|\1${value}\2|" "${DEFAULTS_C_PATH}"
+done
+grep -E 'rt_sta_auto|wl_sta_auto|fw_enable_x|wl_wme|rt_wme|ip6_|telnetd|sshd_enable|lltd_enable|help_enable' "${DEFAULTS_C_PATH}"
 
 
 # 4. 修改 Makefile 添加 vntc 编译项
@@ -85,6 +106,5 @@ grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
 if [ "${TARGET_BOARD}" = "JSH-03" ]; then
     echo ">>> 应用 JSH-03 组网盒子亮灯补丁"
     sed -i '/cpu_gpio_set_pin(gpio_led, flag);/i\        cpu_gpio_mode_set_bit(34, 1);' "${RC_C_PATH}"
-    echo ">>> 查看补丁修复结果:"
     grep -A 3 "cpu_gpio_mode_set_bit(34, 1)" "${RC_C_PATH}"
 fi
