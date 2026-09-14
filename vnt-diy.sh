@@ -29,33 +29,29 @@ echo ">>> defaults.c: ${DEFAULTS_C_PATH}"
 echo ">>> 目标机型: ${TARGET_BOARD}"
 echo "=========================================="
 
-# 1. 覆盖机型配置文件
-if [ -d "${REPO_DIR}/trunk" ]; then
-    cp -rf "${REPO_DIR}/trunk"/* "${SRC_DIR}/trunk/"
-fi
+copy_dir_if_exists() {
+    local source_dir="$1"
+    local target_dir="$2"
 
-# 2. 增量覆盖 Web UI (www)
-WWW_SRC="${REPO_DIR}/padavan-mod-package/modified/trunk/user/www"
-if [ -d "${WWW_SRC}" ]; then
-    cp -rf "${WWW_SRC}"/. "${SRC_DIR}/trunk/user/www/"
-fi
+    if [ -d "${source_dir}" ]; then
+        mkdir -p "${target_dir}"
+        cp -rf "${source_dir}"/. "${target_dir}/"
+    fi
+}
 
-# 3. 拷贝 VNTC 模块
-VNTC_SRC="${REPO_DIR}/patches/vntc"
-if [ -d "${VNTC_SRC}" ]; then
-    mkdir -p "${SRC_DIR}/trunk/user/vntc"
-    cp -rf "${VNTC_SRC}"/* "${SRC_DIR}/trunk/user/vntc/"
-    chmod -R +x "${SRC_DIR}/trunk/user/vntc/"
+# 1. 覆盖机型配置、Web UI 和 VNTC 模块
+copy_dir_if_exists "${REPO_DIR}/trunk" "${SRC_DIR}/trunk"
+copy_dir_if_exists \
+    "${REPO_DIR}/padavan-mod-package/modified/trunk/user/www" \
+    "${SRC_DIR}/trunk/user/www"
+copy_dir_if_exists "${REPO_DIR}/patches/vntc" "${SRC_DIR}/trunk/user/vntc"
+
+if [ -d "${SRC_DIR}/trunk/user/vntc" ]; then
+    chmod -R +x "${SRC_DIR}/trunk/user/vntc"
 fi
 
 # 4. 修改默认 WiFi SSID 前缀和 STA 自动连接参数
 CUSTOM_WIFI_NAME="YYWiFi"
-
-if [ ! -f "${DEFAULTS_H_PATH}" ]; then
-    echo "❌ 错误: 未找到 ${DEFAULTS_H_PATH} 文件！"
-    exit 1
-fi
-
 echo ">>> 正在更新 WiFi SSID 前缀为: ${CUSTOM_WIFI_NAME}"
 sed -i -E "s/#define DEF_WLAN_2G_SSID\s+.*/#define DEF_WLAN_2G_SSID\t\"${CUSTOM_WIFI_NAME}\" \"_%s\"/g" "${DEFAULTS_H_PATH}"
 sed -i -E "s/#define DEF_WLAN_5G_SSID\s+.*/#define DEF_WLAN_5G_SSID\t\"${CUSTOM_WIFI_NAME}\" \"_5G_%s\"/g" "${DEFAULTS_H_PATH}"
@@ -63,29 +59,25 @@ sed -i -E "s/#define DEF_WLAN_2G_GSSID\s+.*/#define DEF_WLAN_2G_GSSID\t\"${CUSTO
 sed -i -E "s/#define DEF_WLAN_5G_GSSID\s+.*/#define DEF_WLAN_5G_GSSID\t\"${CUSTOM_WIFI_NAME}\" \"_GUEST_5G_%s\"/g" "${DEFAULTS_H_PATH}"
 grep -E "DEF_WLAN_" "${DEFAULTS_H_PATH}"
 
-if [ -f "${DEFAULTS_C_PATH}" ]; then
-    echo ">>> 正在修改 defaults.c 参数配置..."
-    sed -i -E 's/\{\s*"rt_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "rt_sta_auto", "1" \}/g' "${DEFAULTS_C_PATH}"
-    sed -i -E 's/\{\s*"wl_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "wl_sta_auto", "1" \}/g' "${DEFAULTS_C_PATH}"
-    grep -E "rt_sta_auto|wl_sta_auto" "${DEFAULTS_C_PATH}"
-else
-    echo "⚠️ 警告: 未找到 ${DEFAULTS_C_PATH} 文件，跳过此步骤。"
-fi
+echo ">>> 正在修改 defaults.c 参数配置..."
+sed -i -E 's/\{\s*"rt_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "rt_sta_auto", "1" \}/g' "${DEFAULTS_C_PATH}"
+sed -i -E 's/\{\s*"wl_sta_auto"\s*,\s*"[0-9]+"*\s*\}/\{ "wl_sta_auto", "1" \}/g' "${DEFAULTS_C_PATH}"
+grep -E "rt_sta_auto|wl_sta_auto" "${DEFAULTS_C_PATH}"
+
 
 # 4. 修改 Makefile 添加 vntc 编译项
+echo ">>> 添加vntc编译项到Makefile"
 sed -i '/^all:/i dir_$(CONFIG_FIRMWARE_INCLUDE_VNT)\t\t+= vntc' "${MAKEFILE_PATH}"
 grep -B 2 "^all:" "${MAKEFILE_PATH}"
-echo "=========================================="
-echo ">>> vnt-diy.sh 执行成功！"
-echo "=========================================="
 
 # 5. 修改 rc.c 自动调用 system("start")
+echo ">>> 添加 system(\"start\") 到 rc.c"
 sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("start");' "${RC_C_PATH}"
 sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("nvram set fw_sn=$(lan_eeprom_mac | awk '\''/MAC/ {gsub(/:/, \\"\\"); print $NF}'\'')");' "${RC_C_PATH}"
 grep -A 3 "// system ready" "${RC_C_PATH}"
 
 # 8. 修改 net_wan.c 自动调用 system("vnt auto");
-# 精准插入：在 doSystem("%s %s %s %s", script_postw... 行下方追加带 Tab 缩进的 system("vnt auto");
+echo ">>> 添加 system(\"vnt auto\") 到 net_wan.c"
 sed -i '/doSystem("%s %s %s %s", script_postw, "up"/a \\tsystem("vnt auto");' "${SRC_DIR}/trunk/user/rc/net_wan.c"
 grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
 
@@ -93,5 +85,6 @@ grep -A 3 "script_postw" "${SRC_DIR}/trunk/user/rc/net_wan.c"
 if [ "${TARGET_BOARD}" = "JSH-03" ]; then
     echo ">>> 应用 JSH-03 组网盒子亮灯补丁"
     sed -i '/cpu_gpio_set_pin(gpio_led, flag);/i \t\tcpu_gpio_mode_set_bit(34, 1);' "${RC_C_PATH}"
+    echo ">>> 查看补丁修复结果:"
     grep -A 3 "cpu_gpio_mode_set_bit(34, 1)" "${RC_C_PATH}"
 fi
