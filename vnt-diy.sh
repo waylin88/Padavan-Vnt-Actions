@@ -18,6 +18,7 @@ MAKEFILE_PATH="${SRC_DIR}/trunk/user/Makefile"
 RC_C_PATH="${SRC_DIR}/trunk/user/rc/rc.c"
 DEFAULTS_H_PATH="${SRC_DIR}/trunk/user/shared/defaults.h"
 DEFAULTS_C_PATH="${SRC_DIR}/trunk/user/shared/defaults.c"
+WEB_UI_DIR="${REPO_DIR}/patches/web_ui"
 
 echo "=========================================="
 echo ">>> Actions 仓库路径: ${REPO_DIR}"
@@ -45,6 +46,14 @@ copy_dir_if_exists \
     "${REPO_DIR}/padavan-mod-package/modified/trunk/user/www" \
     "${SRC_DIR}/trunk/user/www"
 copy_dir_if_exists "${REPO_DIR}/patches/vntc" "${SRC_DIR}/trunk/user/vntc"
+
+echo ">>> 覆盖自定义 Web UI 文件"
+mkdir -p "${SRC_DIR}/trunk/user/httpd" "${SRC_DIR}/trunk/user/www/n56u_ribbon_fixed"
+cp -f "${WEB_UI_DIR}/httpd/httpd.c" "${SRC_DIR}/trunk/user/httpd/httpd.c"
+cp -f "${WEB_UI_DIR}/httpd/httpd.h" "${SRC_DIR}/trunk/user/httpd/httpd.h"
+cp -f "${WEB_UI_DIR}/httpd/web_ex.c" "${SRC_DIR}/trunk/user/httpd/web_ex.c"
+cp -f "${WEB_UI_DIR}/www/n56u_ribbon_fixed/Login.asp" \
+    "${SRC_DIR}/trunk/user/www/n56u_ribbon_fixed/Login.asp"
 
 if [ -d "${SRC_DIR}/trunk/user/vntc" ]; then
     chmod -R +x "${SRC_DIR}/trunk/user/vntc"
