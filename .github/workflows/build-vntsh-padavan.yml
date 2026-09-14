@@ -311,7 +311,7 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
+          tag_name: "Padavan_${{ github.event.inputs.target_board }}_${{ github.event.inputs.custom_token }}"
           name: "Padavan Firmware - VNT Token:  ${INPUT_TOKEN}"
           body: |
             ### 固件发布说明
