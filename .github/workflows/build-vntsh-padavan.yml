@@ -255,25 +255,38 @@ jobs:
            chmod +x ./clear_tree
            fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
 
-      # 9. 收集并打包产物
+      # 9. 收集固件并重命名
       - name: Collect Artifacts
         run: |
           mkdir -p output_files
-          BOARD="${{ github.event.inputs.target_board }}"
           TARGET_IP="${{ matrix.ip }}"
-
           cd padavan-src/trunk/images
-          for file in *.trx *.bin; do
+          for file in *.trx; do
             if [ -f "$file" ]; then
               echo ">>> 找到生成的固件: $file"
-              cp -v "$file" "../../../output_files/${BOARD}_${TARGET_IP}_${file}"
+              
+              # 1. 提取不带后缀的文件名 (例如: JSH-03_3.4.3.9-099)
+              BASE_NAME="${file%.*}"
+              
+              # 2. 裁掉最后一个短横线 '-' 及其右侧内容 (得到: JSH-03_3.4.3.9)
+              PREFIX="${BASE_NAME%-*}"
+              
+              # 3. 拼接目标文件名 (得到: JSH-03_3.4.3.9-VNT-192.168.1.1.trx)
+              NEW_NAME="${PREFIX}-VNT-${TARGET_IP}.trx"
+              
+              echo ">>> 重命名为: $NEW_NAME"
+              cp -v "$file" "../../../output_files/${NEW_NAME}"
+              
+              # 将处理后的文件名保存到环境变量，供上传步骤精确匹配
+              echo "FIRMWARE_FILE=output_files/${NEW_NAME}" >> $GITHUB_ENV
+              echo "FIRMWARE_NAME=${NEW_NAME}" >> $GITHUB_ENV
             fi
           done
 
-      # 10. 上传固件产物
-      - name: Upload Artifacts
+      # 10. 上传单个固件文件（直接上传文件，不带目录层级）
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: Padavan_${{ github.event.inputs.target_board }}_${{ matrix.ip }}
-          path: output_files/*
+          name: ${{ env.FIRMWARE_NAME }}
+          path: ${{ env.FIRMWARE_FILE }}
           if-no-files-found: error
