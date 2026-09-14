@@ -275,7 +275,34 @@ jobs:
           
           echo ">>> 测试固件生成完毕！"
 
-      # 9. 收集固件、重命名并动态获取 Token 进行上传
+      #收 9. 编译完成后统一修改固件名称并集产物
+      - name: Rename Firmware Files
+        run: |
+          TARGET_IP="${{ matrix.ip }}"
+          IMAGE_DIR="padavan-src/trunk/images"
+          OUTPUT_DIR="${GITHUB_WORKSPACE}/output_files"
+
+          mkdir -p "$OUTPUT_DIR"
+          cd "$IMAGE_DIR"
+          shopt -s nullglob
+          firmware_files=(*.trx)
+
+          if [ "${#firmware_files[@]}" -eq 0 ]; then
+            echo "❌ 错误: 未找到 .trx 固件文件！"
+            exit 1
+          fi
+
+          for file in "${firmware_files[@]}"; do
+            BASE_NAME="${file%.*}"
+            PREFIX="${BASE_NAME%-*}"
+            NEW_NAME="${PREFIX}-VNT-${TARGET_IP}.trx"
+
+            echo ">>> 修改固件名称: $file -> $NEW_NAME"
+            mv -- "$file" "$NEW_NAME"
+            cp -v -- "$NEW_NAME" "$OUTPUT_DIR/$NEW_NAME"
+          done
+
+      # 10. 上传已完成改名的固件
       - name: Deploy Firmware via Shell Script
         run: |
           # 1. 准备 SSH 私钥
@@ -284,41 +311,28 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
 
           # 2. 从 Padavan 源码配置文件中提取 Token
-          CONFIG_FILE="padavan-src/trunk/user/vntc/start"
-          if [ -f "$CONFIG_FILE" ]; then
-            TOKEN=$(sed -n 's/^token: //p' "$CONFIG_FILE" | tr -d '\r\n')
-            echo ">>> 成功提取组网 Token: ${TOKEN}"
-          else
-            echo ">>> 错误: 未找到配置文件 $CONFIG_FILE" && exit 1
-          fi
+          TOKEN="${{ github.event.inputs.custom_token }}"
+        
 
-          # 3. 处理固件重命名与路径定义
-          TARGET_IP="${{ matrix.ip }}"
-          REMOTE_USER="${{ secrets.SERVER_USER }}"
-          REMOTE_HOST="${{ secrets.SERVER_HOST }}"
-          REMOTE_PORT="${{ secrets.SERVER_PORT }}"
+          # 3. 定义远程上传参数
+          REMOTE_USER="${{ secrets.SERVER_USER }}"  #服务器用户名
+          REMOTE_HOST="${{ secrets.SERVER_HOST }}" 
+          REMOTE_PORT="${{ secrets.SERVER_PORT }}"  #服务器端口"22"
           REMOTE_PATH="/www/wwwroot/vnt_http/firmware/${TOKEN}/"
 
-          cd padavan-src/trunk/images
+          # 4. 远程创建目录（目录存在时不报错）
+          ssh -o StrictHostKeyChecking=no -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "mkdir -p '$REMOTE_PATH'"
+
+          # 5. 上传重命名后的固件
+          cd "${GITHUB_WORKSPACE}/output_files"
           for file in *.trx; do
             if [ -f "$file" ]; then
-              # 提取 prefix 并重命名，如: JSH-03_3.4.3.9-VNT-10.168.2.1.trx
-              BASE_NAME="${file%.*}"
-              PREFIX="${BASE_NAME%-*}"
-              NEW_NAME="${PREFIX}-VNT-${TARGET_IP}.trx"
-              
-              echo ">>> 处理固件文件: $file -> $NEW_NAME"
-              cp -v "$file" "${GITHUB_WORKSPACE}/output_files/${NEW_NAME}"
-
-              # 4. 远程创建目录（目录存在时不报错）
-              ssh -o StrictHostKeyChecking=no -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "mkdir -p '$REMOTE_PATH'"
-
-              # 5. SCP 上传固件
-              scp -o StrictHostKeyChecking=no -P "$REMOTE_PORT" "$file" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/$NEW_NAME"
+              echo ">>> 上传固件: $file"
+              scp -o StrictHostKeyChecking=no -P "$REMOTE_PORT" "$file" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/$file"
 
               if [ $? -eq 0 ]; then
                 echo "组网 Token: ${TOKEN}"
-                echo "文件上传成功！路径: ${REMOTE_PATH}${NEW_NAME}"
+                echo "文件上传成功！路径: ${REMOTE_PATH}${file}"
               else
                 echo "文件上传失败。" && exit 1
               fi
@@ -339,6 +353,6 @@ jobs:
             - **目标机型**: ${{ github.event.inputs.target_board }}
             - **VNT Token**: ${{ github.event.inputs.custom_token }}
             - **构建时间**: ${{ github.event.repository.updated_at }}
-          files: output_files/*.trx
+          files: "${GITHUB_WORKSPACE}/output_files/*.trx"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
