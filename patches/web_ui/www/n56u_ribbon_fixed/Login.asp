@@ -1,206 +1,187 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#102a43">
-<meta name="robots" content="noindex,nofollow">
 <title><#Web_Title#></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="-1">
 <link rel="shortcut icon" href="images/favicon.ico">
 <link rel="icon" href="images/favicon.png">
-<style>
-:root {
-  color-scheme: light;
-  --navy: #102a43;
-  --blue: #1677a8;
-  --cyan: #27b3b1;
-  --ink: #17324d;
-  --muted: #6d8295;
-  --line: #dbe6ee;
-  --paper: #f4f8fb;
-  --white: #ffffff;
-  --danger: #bd362f;
+<link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/bootstrap/css/main.css">
+<style type="text/css">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
 }
-* { box-sizing: border-box; }
-html, body { min-height: 100%; }
 body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: "Noto Sans", "Source Sans 3", "Segoe UI", sans-serif;
+    background: #282828 url("/bootstrap/img/dark-bg.jpg") repeat scroll center top;
+    color: #333;
+    font-family: Arial, Verdana, Helvetica, sans-serif;
 }
-.login-shell {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: linear-gradient(145deg, #e7f2f7 0%, #f8fbfc 58%, #dbeef0 100%);
+.login-page {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    padding: 24px 20px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .login-panel {
-  width: min(100%, 420px);
-  padding: 42px 38px 34px;
-  background: var(--white);
-  border: 1px solid rgba(16, 42, 67, .08);
-  border-radius: 18px;
-  box-shadow: 0 18px 50px rgba(16, 42, 67, .14);
+    width: min(360px, calc(100vw - 40px));
+    min-width: 0;
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+    margin: 0;
+    padding: 24px 26px 24px;
+    box-sizing: border-box;
+    background: #f5f5f5;
+    border: 1px solid #d8d8d8;
+    border-radius: 10px;
 }
-.brand-mark {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 22px;
-  color: var(--white);
-  background: var(--navy);
-  border-radius: 14px;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0;
+.login-title {
+    margin: 0 0 6px;
+    color: #333;
+    font-size: 22px;
+    font-weight: normal;
+    line-height: 1.3;
+    text-align: center;
 }
-h1 {
-  margin: 0;
-  color: var(--navy);
-  font-size: 28px;
-  line-height: 1.2;
-  letter-spacing: 0;
+.login-subtitle {
+    margin: 0 0 24px;
+    color: #777;
+    font-size: 13px;
+    text-align: center;
 }
-.subtitle {
-  margin: 10px 0 30px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+.login-form label {
+    color: #555;
+    font-size: 13px;
+    font-weight: bold;
 }
-.field { margin-bottom: 18px; }
-.field label {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 600;
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: 100%;
+    height: 42px;
+    padding: 8px 10px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    box-sizing: border-box;
+    font-size: 16px;
 }
-.field input {
-  width: 100%;
-  min-height: 50px;
-  padding: 12px 14px;
-  color: var(--ink);
-  background: #fbfdfe;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  font: inherit;
-  font-size: 16px;
-  outline: none;
-  transition: border-color .18s ease, box-shadow .18s ease;
+.login-form input:focus {
+    border-color: #3a87ad;
+    box-shadow: 0 0 3px rgba(58, 135, 173, .5);
+    outline: none;
 }
-.field input:focus {
-  border-color: var(--cyan);
-  box-shadow: 0 0 0 3px rgba(39, 179, 177, .16);
+.password-row {
+    position: relative;
 }
-.password-wrap { position: relative; }
-.password-wrap input { padding-right: 74px; }
+.password-row input {
+    padding-right: 66px;
+}
 .password-toggle {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  min-height: 34px;
-  padding: 5px 8px;
-  transform: translateY(-50%);
-  color: var(--blue);
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    height: 34px;
+    padding: 0 8px;
+    color: #3a87ad;
+    background: transparent;
+    border: 0;
+    font-size: 12px;
 }
-.password-toggle:focus-visible, .submit:focus-visible {
-  outline: 3px solid rgba(39, 179, 177, .35);
-  outline-offset: 2px;
+.login-error {
+    display: none;
+    margin: 0 0 18px;
+    padding: 9px 12px;
+    color: #b94a48;
+    background: #f2dede;
+    border: 1px solid #eed3d7;
+    border-radius: 3px;
+    font-size: 13px;
+    line-height: 1.4;
 }
-.error {
-  display: none;
-  margin: 0 0 18px;
-  padding: 11px 12px;
-  color: var(--danger);
-  background: #fff2f0;
-  border: 1px solid #f2c5bf;
-  border-radius: 9px;
-  font-size: 14px;
-  line-height: 1.4;
+.login-error.visible {
+    display: block;
 }
-.error.visible { display: block; }
-.submit {
-  width: 100%;
-  min-height: 50px;
-  margin-top: 4px;
-  color: var(--white);
-  background: var(--blue);
-  border: 0;
-  border-radius: 10px;
-  font: inherit;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background .18s ease, transform .18s ease;
+.login-submit {
+    width: 100%;
+    min-height: 42px;
+    margin-top: 6px;
+    font-size: 16px;
 }
-.submit:hover { background: #12658f; }
-.submit:active { transform: translateY(1px); }
-.footer {
-  margin-top: 26px;
-  color: var(--muted);
-  font-size: 12px;
-  text-align: center;
+.login-footer {
+    margin-top: 22px;
+    color: #999;
+    font-size: 11px;
+    text-align: center;
 }
 @media (max-width: 480px) {
-  .login-shell { align-items: flex-start; padding: 18px 14px; }
-  .login-panel { margin-top: 8vh; padding: 32px 22px 26px; border-radius: 14px; }
-  h1 { font-size: 25px; }
+    .login-page {
+        padding: 24px 20px;
+    }
+    .login-panel {
+        width: 100%;
+        max-height: calc(100dvh - 48px);
+        padding: 20px 18px 22px;
+    }
 }
 </style>
-<script>
+<script type="text/javascript">
 function initial() {
-  var failed = '<% get_parameter("error"); %>' === '1';
-  if (failed) {
-    document.getElementById("loginError").className = "error visible";
-    document.getElementById("password").focus();
-  } else {
-    document.getElementById("username").focus();
-  }
+    var error = '<% get_parameter("error"); %>';
+    var errorBox = document.getElementById("loginError");
+    var username = document.getElementById("username");
+    var password = document.getElementById("password");
+
+    if (error == "1") {
+        errorBox.className = "login-error visible";
+        password.focus();
+    } else {
+        username.focus();
+    }
 }
 
 function togglePassword() {
-  var input = document.getElementById("password");
-  var button = document.getElementById("passwordToggle");
-  var visible = input.type === "text";
-  input.type = visible ? "password" : "text";
-  button.innerHTML = visible ? "显示" : "隐藏";
-  button.setAttribute("aria-pressed", visible ? "false" : "true");
+    var password = document.getElementById("password");
+    var button = document.getElementById("passwordToggle");
+    if (password.type == "password") {
+        password.type = "text";
+        button.innerHTML = "隐藏";
+    } else {
+        password.type = "password";
+        button.innerHTML = "显示";
+    }
 }
 </script>
 </head>
 <body onload="initial()">
-<main class="login-shell">
-  <section class="login-panel" aria-labelledby="loginTitle">
-    <div class="brand-mark" aria-hidden="true">R</div>
-    <h1 id="loginTitle"><#Web_Title#></h1>
-    <p class="subtitle">登录路由器管理页面</p>
-    <p id="loginError" class="error" role="alert">用户名或密码错误，请重试。</p>
-    <form method="post" action="Login.asp" autocomplete="on">
-      <div class="field">
-        <label for="username"><#menu5_13_username#></label>
-        <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
-      </div>
-      <div class="field">
-        <label for="password"><#menu5_13_password#></label>
-        <div class="password-wrap">
-          <input id="password" name="password" type="password" autocomplete="current-password" required>
-          <button id="passwordToggle" class="password-toggle" type="button" onclick="togglePassword()" aria-pressed="false">显示</button>
-        </div>
-      </div>
-      <button class="submit" type="submit"><#Login#></button>
-    </form>
-    <div class="footer"><#Web_Title#></div>
-  </section>
-</main>
+<div class="login-page">
+    <div class="login-panel">
+        <h1 class="login-title"><#Web_Title#></h1>
+        <p class="login-subtitle">登录路由器管理页面</p>
+        <div id="loginError" class="login-error" role="alert">用户名或密码错误，请重试。</div>
+        <form class="login-form" method="post" action="Login.asp" autocomplete="on">
+            <div class="control-group">
+                <label for="username"><#menu5_13_username#></label>
+                <input id="username" name="username" type="text" value="admin" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+            </div>
+            <div class="control-group">
+                <label for="password"><#menu5_13_password#></label>
+                <div class="password-row">
+                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                    <button id="passwordToggle" class="password-toggle" type="button" onclick="togglePassword()">显示</button>
+                </div>
+            </div>
+            <button class="btn btn-primary login-submit" type="submit"><#Login#></button>
+        </form>
+        <div class="login-footer"><#Web_Title#></div>
+    </div>
+</div>
 </body>
 </html>
