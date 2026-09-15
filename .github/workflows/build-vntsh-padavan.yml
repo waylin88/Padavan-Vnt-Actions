@@ -8,7 +8,7 @@ on:
         type: choice
         description: '选择机型'
         required: true
-        default: 'E8820V2'
+        default: 'JSH-03'
         options:
           - 'JSH-03'
           - 'ZY-L1'
@@ -16,6 +16,7 @@ on:
           - 'ZY-L1-7628N'
           - 'E8820V2'
           - 'ZTE_E8820S'
+          - 'R6220'
 
       custom_ips:
         type: string
