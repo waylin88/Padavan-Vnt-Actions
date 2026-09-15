@@ -54,6 +54,8 @@ cp -f "${WEB_UI_DIR}/httpd/httpd.h" "${SRC_DIR}/trunk/user/httpd/httpd.h"
 cp -f "${WEB_UI_DIR}/httpd/web_ex.c" "${SRC_DIR}/trunk/user/httpd/web_ex.c"
 cp -f "${WEB_UI_DIR}/www/n56u_ribbon_fixed/Login.asp" \
     "${SRC_DIR}/trunk/user/www/n56u_ribbon_fixed/Login.asp"
+cp -f "${WEB_UI_DIR}/www/n56u_ribbon_fixed/Logout.asp" \
+    "${SRC_DIR}/trunk/user/www/n56u_ribbon_fixed/Logout.asp"
 
 if [ -d "${SRC_DIR}/trunk/user/vntc" ]; then
     chmod -R +x "${SRC_DIR}/trunk/user/vntc"
