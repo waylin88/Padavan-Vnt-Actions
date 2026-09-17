@@ -1,1 +1,91 @@
+name: "Padavan-VNT-Actions"
+run-name: "编译机型 [${{ github.event.inputs.target_board }}] - IP: ${{ github.event.inputs.custom_ips }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_board:
+        type: choice
+        description: '选择机型'
+        required: true
+        default: 'E8820V2'
+        options:
+          - 'JSH-03'
+          - 'ZY-L1'
+          - 'ZY-L1-7620N'
+          - 'ZY-L1-7628N'
+          - 'E8820V2'
+          - 'ZTE_E8820S'
+
+      enable_custom_ip:
+        type: boolean
+        description: '修改 LAN 侧 IP 地址 (勾选生效)'
+        default: true
+
+      custom_ips:
+        type: string
+        description: '填入 IP 列表 (用逗号或空格隔开)'
+        required: false
+        default: '10.168.1.1'
+
+env:
+  REPO_URL: https://github.com/waylin88/rt-n56u.git
+  REPO_BRANCH: webui-dev
+  TZ: Asia/Shanghai
+
+jobs:
+  parse-inputs:
+    runs-on: ubuntu-22.04
+    outputs:
+      ip_matrix: ${{ steps.set-matrix.outputs.ip_matrix }}
+    steps:
+      - name: Parse IP Inputs
+        id: set-matrix
+        run: |
+          ENABLE_IP="${{ github.event.inputs.enable_custom_ip }}"
+          RAW_IPS="${{ github.event.inputs.custom_ips }}"
+          
+          if [ "$ENABLE_IP" = "true" ] && [ -n "$(echo $RAW_IPS | tr -d ' ')" ]; then
+            JSON_ARRAY=$(echo "$RAW_IPS" | tr ',' ' ' | xargs -n1 | jq -R . | jq -s -c .)
+          else
+            JSON_ARRAY='["default"]'
+          fi
+          
+          echo "ip_matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
+
+  build:
+    needs: parse-inputs
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
+
+    steps:
+      # 1. 检查当前仓库
+      - name: Checkout Actions Repo
+        uses: actions/checkout@v4.2.2
+        with:
+          path: 'build-repo'
+
+      # 2. 初始化环境（安装基础工具链）
+      - name: Prepare Toolchain Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential gawk flex bison gperf libtool \
+            autoconf automake m4 pkg-config gettext autopoint python3-docutils libncurses5-dev \
+            libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev fakeroot
+
+      # 3. 克隆 hanwckf Padavan 源码
+      - name: 拉取Padavan源码
+        run: |
+          git clone --depth 1 -b $REPO_BRANCH https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/waylin88/rt-n56u.git padavan-src
+
+      # 4. 下载交叉编译工具链
+      - name: Prepare Toolchain
+        run: |
+          cd padavan-src/toolchain-mipsel
+          sh ./dl_toolchain.sh
 
