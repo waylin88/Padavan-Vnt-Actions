@@ -231,6 +231,14 @@ jobs:
           else
             echo "⚠️ 未找到自定义 trunk 目录，跳过同步。"
           fi
+
+          if [ -d "www" ]; then
+            mkdir -p padavan-src/trunk/user/www
+            cp -rfa www/* padavan-src/trunk/user/www/
+            echo ">>> 自定义 www 目录同步完成！"
+          else
+            echo "️ 未找到自定义 www 目录，跳过同步。"
+          fi
           
       # 6. 执行 Padavan 编译
       - name: Build Firmware
