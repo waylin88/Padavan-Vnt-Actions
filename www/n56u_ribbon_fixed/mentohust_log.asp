@@ -92,10 +92,10 @@ function initial(){
                                         </tr>
                                         <tr>
                                             <td width="15%" style="text-align: left; padding-bottom: 0px;">
-                                                <input type="button" onClick="location.href=location.href" value="<#CTL_refresh#>" class="btn btn-primary" style="width: 170px">
+                                                <input type="button" onClick="location.href=location.href" value="<#CTL_refresh#>" class="btn btn-primary" >
                                             </td>
                                             <td width="15%" style="text-align: left; padding-bottom: 0px;">
-                                                <input type="button" onClick="location.href='mentohust.log'" value="<#CTL_onlysave#>" class="btn btn-success" style="width: 170px">
+                                                <input type="button" onClick="location.href='mentohust.log'" value="<#CTL_onlysave#>" class="btn btn-success" >
                                             </td>
                                         </tr>
                                     </table>

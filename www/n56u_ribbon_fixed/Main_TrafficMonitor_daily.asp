@@ -336,7 +336,7 @@ function switchPage(id){
                                     <div id="tabMenu" class="submenuBlock"></div>
 
                                     <div align="right" style="margin: 3px 8px 0px 0px;">
-                                        <select id="sel_netif" style="width: 200px; margin-bottom: 5px;" onchange="tabSelect(this.value);">
+                                        <select id="sel_netif" onchange="tabSelect(this.value);">
                                         </select>
                                     </div>
 
@@ -353,7 +353,7 @@ function switchPage(id){
                                         <tr>
                                             <td width="50%" style="border-top: 0 none;">
                                                 <#Date#>:&nbsp;
-                                                <select id="dafm" style="width: 200px;" onchange="changeDate(this);">
+                                                <select id="dafm" onchange="changeDate(this);">
                                                     <option value=0>yyyy-mm-dd</option>
                                                     <option value=1>m-dd-yyyy</option>
                                                     <option value=2>mmm d, yyyy</option>
@@ -365,7 +365,7 @@ function switchPage(id){
                                             </td>
                                             <td align="right" style="border-top: 0 none; text-align: right;">
                                                 <#Scale#>:&nbsp;
-                                                <select id="scale" style="width: 200px;" onchange="changeScale(this);">
+                                                <select id="scale" onchange="changeScale(this);">
                                                     <option value=0>KiB</option>
                                                     <option value=1>MiB</option>
                                                     <option value=2>GiB</option>

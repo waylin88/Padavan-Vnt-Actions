@@ -503,7 +503,7 @@ function done_validating(action){
                                                 <#StorageShare#>
                                             </th>
                                             <td>
-                                                <select name="st_samba_mode" class="input" style="width: 300px;">
+                                                <select name="st_samba_mode" class="input" >
                                                     <option value="1" <% nvram_match_x("", "st_samba_mode", "1", "selected"); %>><#StorageShare1#></option>
                                                     <option value="3" <% nvram_match_x("", "st_samba_mode", "3", "selected"); %>><#StorageShare5#></option>
                                                     <option value="4" <% nvram_match_x("", "st_samba_mode", "4", "selected"); %>><#StorageShare2#></option>
@@ -561,7 +561,7 @@ function done_validating(action){
                                                 <#StorageShare#>
                                             </th>
                                             <td>
-                                                <select name="st_ftp_mode" class="input" style="width: 300px;" onchange="on_change_ftp_mode(1);">
+                                                <select name="st_ftp_mode" class="input"  onchange="on_change_ftp_mode(1);">
                                                     <option value="1" <% nvram_match_x("", "st_ftp_mode", "1", "selected"); %>><#StorageShare1#></option>
                                                     <option value="3" <% nvram_match_x("", "st_ftp_mode", "3", "selected"); %>><#StorageShare3#></option>
                                                     <option value="2" <% nvram_match_x("", "st_ftp_mode", "2", "selected"); %>><#StorageShare2#></option>
@@ -583,8 +583,8 @@ function done_validating(action){
                                         <tr id="row_ftp_pasv">
                                             <th><#StoragePasvPR#></th>
                                             <td>
-                                                <input type="text" maxlength="5" class="input" size="10" style="width: 94px;" name="st_ftp_pmin" value="<% nvram_get_x("", "st_ftp_pmin"); %>" onkeypress="return is_number(this,event);"/>&nbsp;-
-                                                <input type="text" maxlength="5" class="input" size="10" style="width: 94px;" name="st_ftp_pmax" value="<% nvram_get_x("", "st_ftp_pmax"); %>" onkeypress="return is_number(this,event);"/>
+                                                <input type="text" maxlength="5" class="input" size="10"  name="st_ftp_pmin" value="<% nvram_get_x("", "st_ftp_pmin"); %>" onkeypress="return is_number(this,event);"/>&nbsp;-
+                                                <input type="text" maxlength="5" class="input" size="10"  name="st_ftp_pmax" value="<% nvram_get_x("", "st_ftp_pmax"); %>" onkeypress="return is_number(this,event);"/>
                                                 &nbsp;<span style="color:#888;">[1..65535]</span>
                                             </td>
                                         </tr>
@@ -844,7 +844,7 @@ function done_validating(action){
                                     <table width="100%" cellpadding="4" cellspacing="0" class="table">
                                         <tr>
                                             <td style="border-top: 0 none;">
-                                                <center><input class="btn btn-primary" style="width: 219px" onclick="applyRule();" type="button" value="<#CTL_apply#>" /></center>
+                                                <center><input class="btn btn-primary"  onclick="applyRule();" type="button" value="<#CTL_apply#>" /></center>
                                             </td>
                                         </tr>
                                     </table>

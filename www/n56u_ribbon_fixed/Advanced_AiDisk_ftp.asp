@@ -573,7 +573,7 @@ function unload_body(){
                                                 <div id="e0" class="FdTemp" style="font-size:9pt; margin-top:1px;"></div>
 
                                                 <div style="text-align:right; margin:10px auto; border-top:1px dotted #CCC; width:95%; padding:2px;">
-                                                    <center><input name="changePermissionBtn" id="changePermissionBtn" type="button" value="<#CTL_apply#>" class="btn btn-primary" style="width: 219px" disabled="disabled"></center>
+                                                    <center><input name="changePermissionBtn" id="changePermissionBtn" type="button" value="<#CTL_apply#>" class="btn btn-primary"  disabled="disabled"></center>
                                                 </div>
                                             </td>
                                         </tr>

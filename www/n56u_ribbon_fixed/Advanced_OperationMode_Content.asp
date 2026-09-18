@@ -190,7 +190,7 @@ table td {text-align: center; }
                                             </div></center>
                                         </div>
 
-                                        <center><input name="button" type="button" class="btn btn-primary" style="width: 219px;" onClick="saveMode();" value="<#CTL_onlysave#>"></center>
+                                        <center><input name="button" type="button" class="btn btn-primary" onClick="saveMode();" value="<#CTL_onlysave#>"></center>
                                         <br/>
                                 </div>
                             </div>

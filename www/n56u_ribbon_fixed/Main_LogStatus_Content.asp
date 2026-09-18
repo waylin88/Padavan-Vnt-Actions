@@ -11,6 +11,20 @@
 <link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="/bootstrap/css/main.css">
 
+<style>
+body.mobile-ui:not(.mobile-iframe) #log_clear,
+body.mobile-ui:not(.mobile-iframe) #log_save {
+    width: 170px !important;
+    max-width: 170px !important;
+    display: inline-block;
+}
+body.mobile-ui:not(.mobile-iframe) #log_refresh {
+    width: 219px !important;
+    max-width: 219px !important;
+    display: inline-block;
+}
+</style>
+
 <script type="text/javascript" src="/jquery.js"></script>
 <script type="text/javascript" src="/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="/state.js"></script>

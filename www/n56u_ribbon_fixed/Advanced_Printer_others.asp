@@ -172,7 +172,7 @@ function done_validating(action){
                                         </tr>
                                         <tr>
                                             <td colspan="2">
-                                                <center><input class="btn btn-primary" style="width: 219px" onclick="applyRule();" type="button" value="<#CTL_apply#>" /></center>
+                                                <center><input class="btn btn-primary" onclick="applyRule();" type="button" value="<#CTL_apply#>" /></center>
                                             </td>
                                         </tr>
                                     </table>

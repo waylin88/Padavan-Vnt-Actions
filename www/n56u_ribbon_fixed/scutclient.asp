@@ -167,20 +167,19 @@ function fill_status(status_code){
 
                                         <tr> <th width="50%"><#menu5_13_username#></th>
                                             <td>
-                                                <input type="text" maxlength="32" class="input" size="32" name="scutclient_username" style="width: 145px" value="<% nvram_get_x("","scutclient_username"); %>" />
+                                                <input type="text" maxlength="32" class="input" size="32" name="scutclient_username" value="<% nvram_get_x("","scutclient_username"); %>" />
                                             </td>
                                         </tr>
 
                                         <tr> <th width="50%"><#menu5_13_password#></th>
                                             <td>
-                                                <input type="password" maxlength="32" class="input" size="32" name="scutclient_password" id="scutclient_password" style="width: 145px" value="<% nvram_get_x("","scutclient_password"); %>" />
-                                                <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('scutclient_password')"><i class="icon-eye-close"></i></button>
+                                                <input type="text" maxlength="32" class="input" size="32" name="scutclient_password" id="scutclient_password" value="<% nvram_get_x("","scutclient_password"); %>" />
                                             </td>
                                         </tr>	
 
                                         <tr> <th width="50%"><#menu5_13_authip#></th>
                                             <td>
-                                                <input type="text" maxlength="15" class="input" size="15" name="scutclient_server_auth_ip" style="width: 145px" value="<% nvram_get_x("","scutclient_server_auth_ip"); %>" onkeypress="return is_ipaddr(this,event);"/>
+                                                <input type="text" maxlength="15" class="input" size="15" name="scutclient_server_auth_ip" value="<% nvram_get_x("","scutclient_server_auth_ip"); %>" onkeypress="return is_ipaddr(this,event);"/>
                                             </td>
                                         </tr>
 
@@ -263,7 +262,7 @@ function fill_status(status_code){
 
                                         <tr>
                                             <td colspan="2">
-                                                <center><input class="btn btn-primary" style="width: 219px" type="button" value="<#CTL_apply#>" onclick="applyRule()" /></center>
+                                                <center><input class="btn btn-primary" type="button" value="<#CTL_apply#>" onclick="applyRule()" /></center>
                                             </td>
                                         </tr>
                                     </table>

@@ -196,7 +196,7 @@ function fill_ss_tunnel_status(status_code){
 
                                         <tr> <th width="50%"><#menu5_16_30#></th>
                                             <td>
-                                                <select name="ss_type" class="input" style="width: 200px;" onchange="switch_ss_type()">
+                                                <select name="ss_type" class="input" onchange="switch_ss_type()">
                                                     <option value="0" >SS</option>
                                                     <option value="1" >SSR</option>
                                                 </select>
@@ -213,20 +213,19 @@ function fill_ss_tunnel_status(status_code){
 
                                         <tr> <th width="50%"><#menu5_16_5#></th>
                                             <td>
-                                                <input type="password" maxlength="32" class="input" size="32" name="ss_key" id="ss_key" value="<% nvram_get_x("","ss_key"); %>" />
-                                                <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('ss_key')"><i class="icon-eye-close"></i></button>
+                                                <input type="text" maxlength="32" class="input" size="32" name="ss_key" id="ss_key" value="<% nvram_get_x("","ss_key"); %>" />
                                             </td>
                                         </tr>	
 										
                                         <tr> <th width="50%"><#menu5_16_6#></th>
                                             <td>
-                                                <input type="text" maxlength="6" class="input" size="15" name="ss_server_port" style="width: 145px" value="<% nvram_get_x("","ss_server_port"); %>" />
+                                                <input type="text" maxlength="6" class="input" size="15" name="ss_server_port" value="<% nvram_get_x("","ss_server_port"); %>" />
                                             </td>
                                         </tr>
 										
                                         <tr> <th width="50%"><#menu5_16_7#></th>
                                             <td>
-                                                <select name="ss_method" class="input" style="width: 250px;">
+                                                <select name="ss_method" class="input">
                                                     <option value="none" >none (ssr only)</option>
                                                     <option value="rc4" >rc4</option>
                                                     <option value="rc4-md5" >rc4-md5</option>
@@ -254,13 +253,13 @@ function fill_ss_tunnel_status(status_code){
                                         
                                         <tr> <th width="50%"><#menu5_16_21#></th>
                                             <td>
-                                                <input type="text" maxlength="6" class="input" size="15" name="ss_timeout" style="width: 145px" value="<% nvram_get_x("","ss_timeout"); %>" />
+                                                <input type="text" maxlength="6" class="input" size="15" name="ss_timeout" value="<% nvram_get_x("","ss_timeout"); %>" />
                                             </td>
                                         </tr>
                                         
                                         <tr id="row_ss_protocol" style="display:none;"> <th width="50%"><#menu5_16_22#></th>
                                             <td>
-                                                <select name="ss_protocol" class="input" style="width: 200px;">   
+                                                <select name="ss_protocol" class="input">   
                                                     <option value="origin" >origin</option>
                                                     <option value="auth_sha1" >auth_sha1</option>
                                                     <option value="auth_sha1_v2" >auth_sha1_v2</option>
@@ -281,7 +280,7 @@ function fill_ss_tunnel_status(status_code){
                                         
                                         <tr id="row_ss_obfs" style="display:none;"> <th width="50%"><#menu5_16_24#></th>
                                             <td>
-                                                <select name="ss_obfs" class="input" style="width: 200px;">   
+                                                <select name="ss_obfs" class="input">   
                                                     <option value="plain" >plain</option>
                                                     <option value="http_simple" >http_simple</option>
                                                     <option value="http_post" >http_post</option>
@@ -300,13 +299,13 @@ function fill_ss_tunnel_status(status_code){
 
                                         <tr> <th width="50%"><#menu5_16_9#></th>
                                             <td>
-                                                <input type="text" maxlength="6" class="input" size="15" name="ss_local_port" style="width: 145px" value="<% nvram_get_x("", "ss_local_port"); %>">
+                                                <input type="text" maxlength="6" class="input" size="15" name="ss_local_port" value="<% nvram_get_x("", "ss_local_port"); %>">
                                             </td>
                                         </tr>
 
                                         <tr> <th width="50%"><#menu5_16_10#></th>
                                             <td>
-                                                <select name="ss_mode" class="input" style="width: 145px;">   
+                                                <select name="ss_mode" class="input">   
                                                     <option value="0" ><#menu5_16_11#></option>
                                                     <option value="1" ><#ChnRoute#></option>
                                                 </select>
@@ -348,13 +347,13 @@ function fill_ss_tunnel_status(status_code){
 
                                         <tr> <th width="50%"><#menu5_16_15#></th>
                                             <td>
-                                                <input type="text" maxlength="6" class="input" size="15" name="ss-tunnel_local_port" style="width: 145px" value="<% nvram_get_x("", "ss-tunnel_local_port"); %>">
+                                                <input type="text" maxlength="6" class="input" size="15" name="ss-tunnel_local_port" value="<% nvram_get_x("", "ss-tunnel_local_port"); %>">
                                             </td>
                                         </tr>
 
                                         <tr> <th width="50%">MTU:</th>
                                             <td>
-                                                <input type="text" maxlength="6" class="input" size="15" name="ss-tunnel_mtu" style="width: 145px" value="<% nvram_get_x("", "ss-tunnel_mtu"); %>">
+                                                <input type="text" maxlength="6" class="input" size="15" name="ss-tunnel_mtu" value="<% nvram_get_x("", "ss-tunnel_mtu"); %>">
                                             </td>
                                         </tr>
 
@@ -407,7 +406,7 @@ function fill_ss_tunnel_status(status_code){
 
                                         <tr> <th width="50%"><#menu5_16_18#></th>
                                             <td>
-                                                <select name="ss_lower_port_only" class="input" style="width: 200px;">
+                                                <select name="ss_lower_port_only" class="input">
                                                     <option value="0" ><#menu5_16_18_0#></option>
                                                     <option value="1" ><#menu5_16_18_1#></option>
                                                     <option value="2" ><#menu5_16_18_2#></option>
@@ -417,7 +416,7 @@ function fill_ss_tunnel_status(status_code){
 
                                         <tr> <th width="50%">MTU:</th>
                                             <td>
-                                                <input type="text" maxlength="6" class="input" size="15" name="ss_mtu" style="width: 145px" value="<% nvram_get_x("", "ss_mtu"); %>">
+                                                <input type="text" maxlength="6" class="input" size="15" name="ss_mtu" value="<% nvram_get_x("", "ss_mtu"); %>">
                                             </td>
                                         </tr>
 
@@ -471,7 +470,7 @@ function fill_ss_tunnel_status(status_code){
 
                                         <tr>
                                             <td colspan="2">
-                                                <center><input class="btn btn-primary" style="width: 219px" type="button" value="<#CTL_apply#>" onclick="applyRule()" /></center>
+                                                <center><input class="btn btn-primary" type="button" value="<#CTL_apply#>" onclick="applyRule()" /></center>
                                             </td>
                                         </tr>
 

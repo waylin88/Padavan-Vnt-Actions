@@ -427,17 +427,17 @@ function done_validating(action){
                                         </tr>
                                         <tr>
                                             <td width="25%">
-                                                <div id="ClientList_Block" class="alert alert-info ddown-list" style="width: 400px;"></div>
+                                                <div id="ClientList_Block" class="alert alert-info ddown-list" ></div>
                                                 <div class="input-append">
                                                     <input type="text" maxlength="12" class="span12" size="12" name="macfilter_list_x_0" value="<% nvram_get_x("", "macfilter_list_x_0"); %>" onKeyPress="return is_hwaddr(event);" style="float:left; width: 110px">
                                                     <button class="btn btn-chevron" id="chevron" type="button" onclick="pullLANIPList(this);" title="Select the MAC of LAN clients."><i class="icon icon-chevron-down"></i></button>
                                                 </div>
                                             </td>
                                             <td width="25%">
-                                                <input type="text" maxlength="2" class="input" style="width: 18px;" size="2" name="macfilter_time_x_starthour" onKeyPress="return is_number(this,event);"/>:
-                                                <input type="text" maxlength="2" class="input" style="width: 18px;" size="2" name="macfilter_time_x_startmin" onKeyPress="return is_number(this,event);"/>&nbsp;-
-                                                <input type="text" maxlength="2" class="input" style="width: 18px;" size="2" name="macfilter_time_x_endhour" onKeyPress="return is_number(this,event);"/>:
-                                                <input type="text" maxlength="2" class="input" style="width: 18px;" size="2" name="macfilter_time_x_endmin" onKeyPress="return is_number(this,event);"/>
+                                                <input type="text" maxlength="2" class="input" size="2" name="macfilter_time_x_starthour" onKeyPress="return is_number(this,event);"/>:
+                                                <input type="text" maxlength="2" class="input" size="2" name="macfilter_time_x_startmin" onKeyPress="return is_number(this,event);"/>&nbsp;-
+                                                <input type="text" maxlength="2" class="input" size="2" name="macfilter_time_x_endhour" onKeyPress="return is_number(this,event);"/>:
+                                                <input type="text" maxlength="2" class="input" size="2" name="macfilter_time_x_endmin" onKeyPress="return is_number(this,event);"/>
                                             </td>
                                             <td width="45%">
                                                 <div class="controls">
@@ -458,7 +458,7 @@ function done_validating(action){
 
                                     <table class="table">
                                         <tr>
-                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                         </tr>
                                     </table>
                                 </div>

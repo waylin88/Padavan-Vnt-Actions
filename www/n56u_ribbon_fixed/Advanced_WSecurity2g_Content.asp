@@ -125,8 +125,7 @@ function done_validating(action){
                                             <th><a class="help_tooltip" href="javascript:void(0);"  onmouseover="openTooltip(this,2,3);"><#WLANAuthentication11a_ExAuthDBPassword_itemname#></a></th>
                                             <td>
                                                 <div class="input-append">
-                                                    <input type="password" name="rt_radius_key" id="rt_radius_key" maxlength="64" size="32" style="width: 175px;" value="<% nvram_get_x("","rt_radius_key"); %>" />
-                                                    <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('rt_radius_key')"><i class="icon-eye-close"></i></button>
+                                                    <input type="text" name="rt_radius_key" id="rt_radius_key" maxlength="64" size="32" value="<% nvram_get_x("","rt_radius_key"); %>" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -135,7 +134,7 @@ function done_validating(action){
                                     <table class="table">
                                         <tr>
                                             <td style="border-top: 0 none; text-align: center;">
-                                                <input class="btn btn-primary" style="width: 219px" type="button" value="<#CTL_apply#>" onclick="applyRule()" />
+                                                <input class="btn btn-primary" type="button" value="<#CTL_apply#>" onclick="applyRule()" />
                                             </td>
                                         </tr>
                                     </table>

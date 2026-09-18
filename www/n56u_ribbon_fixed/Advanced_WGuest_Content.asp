@@ -311,8 +311,7 @@ function change_guest_auth_mode(mflag) {
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this, 0, 7);"><#WLANConfig11b_x_PSKKey_itemname#></a></th>
                                             <td>
                                                 <div class="input-append">
-                                                    <input type="password" name="wl_guest_wpa_psk" id="wl_guest_wpa_psk" maxlength="64" size="32" value="" style="width: 175px;">
-                                                    <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('wl_guest_wpa_psk');"><i class="icon-eye-close"></i></button>
+                                                    <input type="text" name="wl_guest_wpa_psk" id="wl_guest_wpa_psk" maxlength="64" size="32" value="">
                                                 </div>
                                             </td>
                                         </tr>
@@ -336,7 +335,7 @@ function change_guest_auth_mode(mflag) {
                                     <table class="table">
                                         <tr>
                                             <td style="border-top: 0 none; text-align: center;">
-                                                <input type="button" id="applyButton" class="btn btn-primary" style="width: 219px" value="<#CTL_apply#>" onclick="applyRule();">
+                                                <input type="button" id="applyButton" class="btn btn-primary" value="<#CTL_apply#>" onclick="applyRule();">
                                             </td>
                                         </tr>
                                     </table>

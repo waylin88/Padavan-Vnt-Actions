@@ -389,7 +389,7 @@ function openLink(s) {
                                     <table class="table">
                                         <tr>
                                             <td style="border: 0 none;">
-                                                <center><input class="btn btn-primary" style="width: 219px" onclick="applyRule();" type="button" value="<#CTL_apply#>" /></center>
+                                                <center><input class="btn btn-primary" onclick="applyRule();" type="button" value="<#CTL_apply#>" /></center>
                                             </td>
                                         </tr>
                                     </table>

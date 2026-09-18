@@ -236,8 +236,8 @@ function done_validating(action){
                                         <tr>
                                             <th width="50%">FTP ALG (ports)</th>
                                             <td>
-                                                <input type="text" maxlength="5" size="5" style="width: 50px;" name="nf_alg_ftp0" class="input" value="<% nvram_get_x("", "nf_alg_ftp0"); %>" onkeypress="return is_number(this,event);"/>&nbsp;,&nbsp;
-                                                <input type="text" maxlength="5" size="5" style="width: 50px;" name="nf_alg_ftp1" class="input" value="<% nvram_get_x("", "nf_alg_ftp1"); %>" onkeypress="return is_number(this,event);"/>
+                                                <input type="text" maxlength="5" size="5" name="nf_alg_ftp0" class="input" value="<% nvram_get_x("", "nf_alg_ftp0"); %>" onkeypress="return is_number(this,event);"/>&nbsp;,&nbsp;
+                                                <input type="text" maxlength="5" size="5" name="nf_alg_ftp1" class="input" value="<% nvram_get_x("", "nf_alg_ftp1"); %>" onkeypress="return is_number(this,event);"/>
                                             </td>
                                         </tr>
                                         <tr>
@@ -303,7 +303,7 @@ function done_validating(action){
                                         <tr>
                                             <td colspan="2">
                                                 <br />
-                                                <center><input class="btn btn-primary" style="width: 219px" onclick="applyRule();" type="button" value="<#CTL_apply#>" /></center>
+                                                <center><input class="btn btn-primary" onclick="applyRule();" type="button" value="<#CTL_apply#>" /></center>
                                             </td>
                                         </tr>
                                     </table>

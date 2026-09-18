@@ -154,15 +154,15 @@ function applyRule(){
     </tr>
     <tr>
         <th><#AiDisk_Account#>:</th>
-        <td ><input class="input" name="new_account" id="new_account" type="text" maxlength="20" style="width: 150px;"></td>
+        <td ><input class="input" name="new_account" id="new_account" type="text" maxlength="20"></td>
     </tr>
     <tr>
         <th><#ModAccountPassword#>:</th>
-        <td><input class="input" name="new_password" id="new_password" type="password" maxlength="20" style="width: 150px;"></td>
+        <td><input class="input" name="new_password" id="new_password" type="password" maxlength="20"></td>
     </tr>
     <tr>
         <th><#Confirmpassword#>: </th>
-        <td><input class="input" name="confirm_password" id="confirm_password" maxlength="20" type="password" style="width: 150px;"></td>
+        <td><input class="input" name="confirm_password" id="confirm_password" maxlength="20" type="password"></td>
     </tr>
     <tr>
         <th colspan="2" style="text-align: center"><input name="button" type="button" class="btn btn-primary" onclick="applyRule();" value="<#CTL_modify#>"></th>

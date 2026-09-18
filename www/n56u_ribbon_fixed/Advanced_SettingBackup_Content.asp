@@ -317,13 +317,13 @@ $j.fn.fileName = function() {
                                         <tr id="row_nv_reset" style="display:none">
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this,19,1)"><#Setting_factorydefault_itemname#></a></th>
                                             <td>
-                                                <input name="action1" class="btn btn-danger" style="width: 219px;" onclick="restoreNVRAM();" type="button" value="<#CTL_restore#>"/>
+                                                <input name="action1" class="btn btn-danger" onclick="restoreNVRAM();" type="button" value="<#CTL_restore#>"/>
                                             </td>
                                         </tr>
                                         <tr id="row_nv_backup" style="display:none">
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this,19,2)"><#Setting_save_itemname#></a></th>
                                             <td>
-                                                <input name="action2" class="btn btn-info" style="width: 219px;" onclick="saveSetting();" type="button" value="<#CTL_onlysave#>"/>
+                                                <input name="action2" class="btn btn-info" onclick="saveSetting();" type="button" value="<#CTL_onlysave#>"/>
                                             </td>
                                         </tr>
                                         <tr id="row_nv_restore1" style="display:none">
@@ -335,7 +335,7 @@ $j.fn.fileName = function() {
                                         <tr id="row_nv_restore2" style="display:none">
                                             <th style="border-top: 0 none; padding-top: 0px;"></th>
                                             <td style="border-top: 0 none; padding-top: 0px;">
-                                                <input name="upload_nv" class="btn btn-info" style="width: 219px;" onclick="uploadSetting();" type="button" value="<#CTL_upload#>"/>
+                                                <input name="upload_nv" class="btn btn-info" onclick="uploadSetting();" type="button" value="<#CTL_upload#>"/>
                                             </td>
                                         </tr>
                                         <tr>
@@ -350,7 +350,7 @@ $j.fn.fileName = function() {
                                         <tr>
                                             <th><#Adm_Setting_commit_now#></th>
                                             <td>
-                                                <button type="button" name="commit_nvram" id="commit_nvram" class="btn" style="width: 219px; outline: 0"><i class="icon icon-fire"></i>&nbsp;<#CTL_Commit#></button>
+                                                <button type="button" name="commit_nvram" id="commit_nvram" class="btn" ><i class="icon icon-fire"></i>&nbsp;<#CTL_Commit#></button>
                                             </td>
                                         </tr>
                                     </table>
@@ -377,13 +377,13 @@ $j.fn.fileName = function() {
                                         <tr id="row_st_reset" style="display:none">
                                             <th><#Setting_factorydefault_itemname#></th>
                                             <td colspan="2">
-                                                <input name="st_action1" class="btn btn-danger" style="width: 219px;" type="button" value="<#CTL_restore#>" onclick="restoreStorage();"/>
+                                                <input name="st_action1" class="btn btn-danger" type="button" value="<#CTL_restore#>" onclick="restoreStorage();"/>
                                             </td>
                                         </tr>
                                         <tr id="row_st_backup" style="display:none">
                                             <th><#Adm_Setting_store_backup#></th>
                                             <td>
-                                                <input name="st_action2" class="btn btn-info" style="width: 219px;" onclick="saveStorage();" type="button" value="<#CTL_onlysave#>"/>
+                                                <input name="st_action2" class="btn btn-info" onclick="saveStorage();" type="button" value="<#CTL_onlysave#>"/>
                                             </td>
                                         </tr>
                                         <tr id="row_st_restore1" style="display:none">
@@ -395,7 +395,7 @@ $j.fn.fileName = function() {
                                         <tr id="row_st_restore2" style="display:none">
                                             <th style="border-top: 0 none; padding-top: 0px;"></th>
                                             <td style="border-top: 0 none; padding-top: 0px;">
-                                                <input name="upload_st" class="btn btn-info" style="width: 219px;" onclick="uploadStorage();" type="button" value="<#CTL_upload#>"/>
+                                                <input name="upload_st" class="btn btn-info" onclick="uploadStorage();" type="button" value="<#CTL_upload#>"/>
                                             </td>
                                         </tr>
                                         <tr>
@@ -425,7 +425,7 @@ $j.fn.fileName = function() {
                                         <tr>
                                             <th><#Adm_Setting_store_now#></th>
                                             <td colspan="2">
-                                                <button type="button" name="commit_storage" id="commit_storage" class="btn" style="width: 219px; outline: 0"><i class="icon icon-fire"></i>&nbsp;<#CTL_Commit#></button>
+                                                <button type="button" name="commit_storage" id="commit_storage" class="btn" ><i class="icon icon-fire"></i>&nbsp;<#CTL_Commit#></button>
                                             </td>
                                         </tr>
                                     </table>

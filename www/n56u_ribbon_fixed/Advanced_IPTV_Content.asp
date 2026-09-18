@@ -424,7 +424,7 @@ function on_xupnpd_link(){
 
                                     <table class="table">
                                         <tr>
-                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                         </tr>
                                     </table>
                                 </div>

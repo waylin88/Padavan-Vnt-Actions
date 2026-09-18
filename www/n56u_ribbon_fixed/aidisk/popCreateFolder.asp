@@ -115,7 +115,7 @@ function applyRule(){
       <td width="50%"><input class="input" type="text" name="folder" id="folder"></td>
     </tr>
     <tr>
-      <th colspan="2" style="text-align: center;"><input id="Submit" type="button" class="btn btn-primary" style="width: 170px;" value="<#CTL_add#>"></th>
+      <th colspan="2" style="text-align: center;"><input id="Submit" type="button" class="btn btn-primary" value="<#CTL_add#>"></th>
     </tr>
   </table>
 </form>

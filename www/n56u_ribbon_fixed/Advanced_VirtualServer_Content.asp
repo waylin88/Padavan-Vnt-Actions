@@ -579,16 +579,16 @@ function valid_IP_subnet(obj){
                                         <tr id="row_upnp_eports">
                                             <th><#UPnP_EPorts#></th>
                                             <td>
-                                                <input type="text" maxlength="5" class="input" size="10" style="width: 94px;" name="upnp_eport_min" value="<% nvram_get_x("", "upnp_eport_min"); %>" onkeypress="return is_number(this,event);"/>&nbsp;-
-                                                <input type="text" maxlength="5" class="input" size="10" style="width: 94px;" name="upnp_eport_max" value="<% nvram_get_x("", "upnp_eport_max"); %>" onkeypress="return is_number(this,event);"/>
+                                                <input type="text" maxlength="5" class="input" size="10"  name="upnp_eport_min" value="<% nvram_get_x("", "upnp_eport_min"); %>" onkeypress="return is_number(this,event);"/>&nbsp;-
+                                                <input type="text" maxlength="5" class="input" size="10"  name="upnp_eport_max" value="<% nvram_get_x("", "upnp_eport_max"); %>" onkeypress="return is_number(this,event);"/>
                                                 &nbsp;<span style="color:#888;">[1..65535]</span>
                                             </td>
                                         </tr>
                                         <tr id="row_upnp_iports">
                                             <th><#UPnP_IPorts#></th>
                                             <td>
-                                                <input type="text" maxlength="5" class="input" size="10" style="width: 94px;" name="upnp_iport_min" value="<% nvram_get_x("", "upnp_iport_min"); %>" onkeypress="return is_number(this,event);"/>&nbsp;-
-                                                <input type="text" maxlength="5" class="input" size="10" style="width: 94px;" name="upnp_iport_max" value="<% nvram_get_x("", "upnp_iport_max"); %>" onkeypress="return is_number(this,event);"/>
+                                                <input type="text" maxlength="5" class="input" size="10"  name="upnp_iport_min" value="<% nvram_get_x("", "upnp_iport_min"); %>" onkeypress="return is_number(this,event);"/>&nbsp;-
+                                                <input type="text" maxlength="5" class="input" size="10"  name="upnp_iport_max" value="<% nvram_get_x("", "upnp_iport_max"); %>" onkeypress="return is_number(this,event);"/>
                                                 &nbsp;<span style="color:#888;">[1..65535]</span>
                                             </td>
                                         </tr>
@@ -692,7 +692,7 @@ function valid_IP_subnet(obj){
 
                                     <table class="table">
                                         <tr>
-                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                         </tr>
                                     </table>
                                 </div>

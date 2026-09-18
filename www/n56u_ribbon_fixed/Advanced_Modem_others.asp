@@ -367,11 +367,7 @@ function done_validating(action){
                                         <tr>
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this,21,2);"><#HSDPAConfig_pin_code_itemname#>:</a></th>
                                             <td>
-                                                <div class="input-append">
-                                                    <input id="modem_pin" name="modem_pin" class="input" type="password" maxlength="8" size="32" style="width: 175px;" value="<% nvram_get_x("", "modem_pin"); %>" onkeypress="return is_number(this,event);"/>
-                                                    <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('modem_pin')"><i class="icon-eye-close"></i></button>
-                                                    &nbsp;<span id="hint_pin" style="color:#888;"></span>
-                                                </div>
+                                                <input id="modem_pin" name="modem_pin" class="input" type="text" maxlength="8" size="32"  value="<% nvram_get_x("", "modem_pin"); %>" onkeypress="return is_number(this,event);"/>
                                             </td>
                                         </tr>
                                         <tr id="row_modem_dial">
@@ -390,11 +386,7 @@ function done_validating(action){
                                         <tr>
                                             <th><a class="help_tooltip"  href="javascript:void(0);" onmouseover="openTooltip(this,21,13);"><#AiDisk_Password#>:</a></th>
                                             <td>
-                                                <div class="input-append">
-                                                    <input type="password" name="modem_pass" id="modem_pass" maxlength="32" size="32" style="width: 175px;" value="<% nvram_get_x("", "modem_pass"); %>">
-                                                    <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('modem_pass')"><i class="icon-eye-close"></i></button>
-                                                    &nbsp;<span id="hint_pass" style="color:#888;"></span>
-                                                </div>
+                                                <input type="text" name="modem_pass" id="modem_pass" maxlength="32" size="32"  value="<% nvram_get_x("", "modem_pass"); %>">
                                             </td>
                                         </tr>
                                         <tr id="row_modem_nets">
@@ -504,7 +496,7 @@ function done_validating(action){
 
                                     <table class="table">
                                         <tr>
-                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                         </tr>
                                     </table>
                                 </div>

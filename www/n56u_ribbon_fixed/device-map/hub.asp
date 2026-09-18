@@ -131,7 +131,7 @@ function initial(){
 	if (total_mounted > 1) {
 		code +='<table width="100%" cellpadding="4" cellspacing="0" class="table">\n';
 		code +='  <tr>\n';
-		code +='    <td><center><input type="button" class="btn btn-success span2" style="width: 200px" onclick="remove_disk(-1);" value="Remove all devices"></center></td>\n';
+		code +='    <td><center><input type="button" class="btn btn-success span2" onclick="remove_disk(-1);" value="Remove all devices"></center></td>\n';
 		code +='  </tr>\n';
 		code +='</table>\n';
 	}

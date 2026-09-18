@@ -569,10 +569,7 @@ function simplyMAC(fullMAC){
                                         <tr>
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this,7,5);"><#PPPConnection_Password_itemname#></a></th>
                                             <td>
-                                                <div class="input-append">
-                                                    <input type="password" maxlength="64" class="input" size="32" name="wan_pppoe_passwd" id="wan_pppoe_passwd" style="width: 175px;" value="<% nvram_get_x("","wan_pppoe_passwd"); %>"/>
-                                                    <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('wan_pppoe_passwd')"><i class="icon-eye-close"></i></button>
-                                                </div>
+                                                <input type="text" maxlength="64" class="input" size="32" name="wan_pppoe_passwd" id="wan_pppoe_passwd"  value="<% nvram_get_x("","wan_pppoe_passwd"); %>"/>
                                             </td>
                                         </tr>
                                         <tr>
@@ -640,7 +637,7 @@ function simplyMAC(fullMAC){
 
                                     <table class="table">
                                         <tr>
-                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                         </tr>
                                     </table>
                                 </div>

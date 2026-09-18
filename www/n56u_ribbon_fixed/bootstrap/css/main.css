@@ -616,6 +616,11 @@ textarea[readonly] {
     border-radius: 3px 0 0 3px;
 }
 
+.box input[type="button"].btn:not(.btn-chevron):not(.btn-mini):not(#log_clear):not(#log_save):not(#log_refresh),
+.box input[type="submit"].btn:not(.btn-chevron):not(.btn-mini):not(#log_clear) {
+    width: 219px;
+}
+
 @media screen and (max-width: 800px) {
     html, body {
         min-width: 0;
@@ -623,8 +628,9 @@ textarea[readonly] {
     }
 
     body.mobile-ui:not(.mobile-iframe) {
-        padding: 40px 0 0;
+        padding: 50px 0 0;
         box-sizing: border-box;
+        background-color: #f5f5f5;
     }
 
     body.mobile-ui:not(.mobile-iframe) .wrapper > div.container-fluid:first-of-type {
@@ -729,12 +735,12 @@ textarea[readonly] {
 
     .side_nav {
         position: fixed;
-        top: 40px;
+        top: 50px;
         bottom: 0;
         left: 0;
         z-index: 1001;
         width: min(220px, 72vw);
-        height: calc(100vh - 40px);
+        height: calc(100vh - 50px);
         margin: 0;
         padding: 0 0 12px !important;
         overflow-x: hidden;
@@ -765,7 +771,7 @@ textarea[readonly] {
 
     .side_nav ul a {
         font-size: 13px;
-        line-height: 35px;
+        line-height: 30px;
         padding: 8px 10px;
     }
 
@@ -807,7 +813,7 @@ textarea[readonly] {
         right: 0;
         left: 0;
         z-index: 1003;
-        height: 40px;
+        height: 50px;
         background-color: #006dcc;
         background-image: linear-gradient(to bottom, #0088cc, #0044cc);
         background-repeat: repeat-x;
@@ -827,12 +833,12 @@ textarea[readonly] {
 
     #mobilePageTitle {
         display: block;
-        margin: 0 78px 0 54px;
+        margin: 0 90px 0 60px;
         overflow: hidden;
         color: #fff;
         font-size: 14px;
         font-weight: bold;
-        line-height: 40px;
+        line-height: 50px;
         text-overflow: ellipsis;
         text-shadow: 0 -1px 0 rgba(0, 0, 0, .25);
         white-space: nowrap;
@@ -840,18 +846,19 @@ textarea[readonly] {
 
     #mobileLogo {
         position: absolute;
-        top: 5px;
+        top: 16px;
         right: 10px;
-        width: auto;
-        height: 30px;
         max-width: 82px;
+        height: auto;
+        width: auto;
+        z-index: 10;
     }
 
     #mobileMenuToggle {
         position: absolute;
-        top: 2px;
+        top: 7px;
         left: 5px;
-        width: 42px;
+        width: 48px;
         height: 36px;
         padding: 0;
         color: #fff;
@@ -862,8 +869,8 @@ textarea[readonly] {
 
     #mobileMenuToggle span {
         display: block;
-        width: 22px;
-        height: 2px;
+        width: 26px;
+        height: 3px;
         margin: 5px auto;
         background: #fff;
         border-radius: 1px;
@@ -872,7 +879,7 @@ textarea[readonly] {
     #mobileMenuOverlay {
         display: none;
         position: fixed;
-        top: 40px;
+        top: 50px;
         right: 0;
         bottom: 0;
         left: 0;
@@ -1099,5 +1106,118 @@ textarea[readonly] {
     #footer {
         padding: 8px 5px;
         text-align: center;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .box table {
+        width: 100% !important;
+        max-width: 100% !important;
+        table-layout: fixed;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .box table th,
+    body.mobile-ui:not(.mobile-iframe) .box table td {
+        width: auto !important;
+        white-space: normal;
+        word-break: break-word;
+        padding: 6px 4px;
+        vertical-align: middle;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .box table td > div,
+    body.mobile-ui:not(.mobile-iframe) .box table td > form {
+        width: 100%;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) input.input,
+    body.mobile-ui:not(.mobile-iframe) select.input,
+    body.mobile-ui:not(.mobile-iframe) textarea.input,
+    body.mobile-ui:not(.mobile-iframe) input[type="text"],
+    body.mobile-ui:not(.mobile-iframe) input[type="password"],
+    body.mobile-ui:not(.mobile-iframe) input[type="number"],
+    body.mobile-ui:not(.mobile-iframe) input[type="tel"],
+    body.mobile-ui:not(.mobile-iframe) input[type="email"],
+    body.mobile-ui:not(.mobile-iframe) input[type="url"],
+    body.mobile-ui:not(.mobile-iframe) input[type="search"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 36px;
+        line-height: 36px;
+        box-sizing: border-box;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) textarea.input,
+    body.mobile-ui:not(.mobile-iframe) textarea {
+        height: auto;
+        min-height: 60px;
+        line-height: 1.4;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .round_bottom > .row-fluid > div[align="right"] {
+        text-align: left !important;
+        margin: 3px 0 !important;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) #sel_netif {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .round_bottom > .row-fluid > div[align="right"] + div {
+        margin-top: 0 !important;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .btn,
+    body.mobile-ui:not(.mobile-iframe) input[type="button"],
+    body.mobile-ui:not(.mobile-iframe) input[type="submit"],
+    body.mobile-ui:not(.mobile-iframe) input[type="reset"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 42px;
+        line-height: 42px;
+        padding: 0 10px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .input-append,
+    body.mobile-iframe .input-append {
+        display: flex;
+        width: 100%;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .input-append input,
+    body.mobile-iframe .input-append input {
+        width: auto !important;
+        flex: 1;
+        min-width: 0;
+        height: 36px;
+        line-height: 36px;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .input-append .btn-chevron,
+    body.mobile-ui:not(.mobile-iframe) .input-append button.btn,
+    body.mobile-iframe .input-append .btn-chevron,
+    body.mobile-iframe .input-append button.btn {
+        width: auto !important;
+        max-width: none !important;
+        height: 36px;
+        line-height: 36px;
+        padding: 0 10px;
+        flex: none;
+    }
+
+    body.mobile-ui .box table td > span[style*="color:#888"],
+    body.mobile-ui .box table td > span[style*="color: #888"] {
+        display: none !important;
+    }
+
+    body.mobile-ui .box table td > button[onclick*="passwordShowHide"] {
+        display: none !important;
+    }
+
+    body.mobile-ui:not(.mobile-iframe) .box .round_bottom {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }

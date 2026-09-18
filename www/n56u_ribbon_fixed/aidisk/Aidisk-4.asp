@@ -149,7 +149,7 @@ function clickevent(){
                 <a class="btn" style="min-width: 170px;" href="Aidisk-3.asp"><#btn_pre#></a>
             </td>
             <td>
-                <a id="finish" class="btn btn-primary" style="width: 170px;" href="javascript:void(0);"><#CTL_finish#></a>
+                <a id="finish" class="btn btn-primary"  href="javascript:void(0);"><#CTL_finish#></a>
             </td>
         </tr>
     </table>

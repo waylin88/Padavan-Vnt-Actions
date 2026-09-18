@@ -142,25 +142,25 @@ function fill_status(status_code){
 
                                         <tr> <th width="50%"><#menu5_14_2#></th>
                                             <td>
-                                                <input type="text" maxlength="15" class="input" size="15" name="dns_forwarder_bind" style="width: 145px" value="<% nvram_get_x("","dns_forwarder_bind"); %>" onkeypress="return is_ipaddr(this,event);"/>
+                                                <input type="text" maxlength="15" class="input" size="15" name="dns_forwarder_bind" value="<% nvram_get_x("","dns_forwarder_bind"); %>" onkeypress="return is_ipaddr(this,event);"/>
                                             </td>
                                         </tr>
 
                                         <tr> <th width="50%"><#menu5_14_3#></th>
                                             <td>
-                                                <input type="text" maxlength="5" class="input" size="15" name="dns_forwarder_port" style="width: 145px" value="<% nvram_get_x("", "dns_forwarder_port"); %>">
+                                                <input type="text" maxlength="5" class="input" size="15" name="dns_forwarder_port" value="<% nvram_get_x("", "dns_forwarder_port"); %>">
                                             </td>
                                         </tr>
 
                                         <tr> <th width="50%"><#menu5_14_4#></th>
                                             <td>
-                                                <input type="text" maxlength="64" class="input" size="64" name="dns_forwarder_server" style="width: 145px" value="<% nvram_get_x("", "dns_forwarder_server"); %>">
+                                                <input type="text" maxlength="64" class="input" size="64" name="dns_forwarder_server" value="<% nvram_get_x("", "dns_forwarder_server"); %>">
                                             </td>
                                         </tr>
 
                                         <tr>
                                             <td colspan="2">
-                                                <center><input class="btn btn-primary" style="width: 219px" type="button" value="<#CTL_apply#>" onclick="applyRule()" /></center>
+                                                <center><input class="btn btn-primary" type="button" value="<#CTL_apply#>" onclick="applyRule()" /></center>
                                             </td>
                                         </tr>
                                     </table>

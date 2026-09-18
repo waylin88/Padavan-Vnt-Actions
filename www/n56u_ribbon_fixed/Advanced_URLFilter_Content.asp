@@ -292,10 +292,10 @@ function done_validating(action){
                                         <tr>
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this,9,2);"><#FirewallConfig_URLActiveTime_itemname#>:</a></th>
                                             <td colspan="2">
-                                                <input type="text" maxlength="2" class="input" style="width: 25px;" size="2" name="url_time_x_starthour" onKeyPress="return is_number(this,event);">:
-                                                <input type="text" maxlength="2" class="input" style="width: 25px;" size="2" name="url_time_x_startmin" onKeyPress="return is_number(this,event);">-
-                                                <input type="text" maxlength="2" class="input" style="width: 25px;" size="2" name="url_time_x_endhour" onKeyPress="return is_number(this,event);">:
-                                                <input type="text" maxlength="2" class="input" style="width: 25px;" size="2" name="url_time_x_endmin" onKeyPress="return is_number(this,event);">
+                                                <input type="text" maxlength="2" class="input" size="2" name="url_time_x_starthour" onKeyPress="return is_number(this,event);">:
+                                                <input type="text" maxlength="2" class="input" size="2" name="url_time_x_startmin" onKeyPress="return is_number(this,event);">-
+                                                <input type="text" maxlength="2" class="input" size="2" name="url_time_x_endhour" onKeyPress="return is_number(this,event);">:
+                                                <input type="text" maxlength="2" class="input" size="2" name="url_time_x_endmin" onKeyPress="return is_number(this,event);">
                                             </td>
                                         </tr>
                                         <tr>
@@ -333,7 +333,7 @@ function done_validating(action){
 
                                     <table class="table">
                                         <tr>
-                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                            <td style="border: 0 none;"><center><input name="button" type="button" class="btn btn-primary" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                         </tr>
                                     </table>
                                 </div>

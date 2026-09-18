@@ -246,10 +246,10 @@ function checkPasswdValid(passwd){
     </tr>
     <tr>
         <td width="50%" style="text-align: right; border-top: 1px dashed #ddd">
-            <a class="btn" style="width: 170px;" href="javascript:go_pre_page();"><#btn_pre#></a>
+            <a class="btn"  href="javascript:go_pre_page();"><#btn_pre#></a>
         </td>
         <td style="border-top: 1px dashed #ddd">
-            <a class="btn btn-primary" style="width: 170px;" href="javascript:passTheResult();"><#btn_next#></a>
+            <a class="btn btn-primary"  href="javascript:passTheResult();"><#btn_next#></a>
         </td>
     </tr>
 </table>

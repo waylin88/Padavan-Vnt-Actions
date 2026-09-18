@@ -344,8 +344,8 @@ function checkDDNSReturnCode(){
 			<a class="btn" style="min-width: 170px;" href="javascript:go_pre_page();"><#btn_pre#></a>
 		</td>
 		<td style="border-top: 1px dashed #ddd">
-		    <a id="gotonext_block" class="btn btn-primary" style="width: 170px;" href="javascript:go_next_page();"><#btn_next#></a>
-		    <a id="gotonext_disabled" class="btn btn-primary" style="width: 170px;"><#btn_next#></a>
+		    <a id="gotonext_block" class="btn btn-primary"  href="javascript:go_next_page();"><#btn_next#></a>
+		    <a id="gotonext_disabled" class="btn btn-primary" ><#btn_next#></a>
 		</td>
 	</tr>
 </table>

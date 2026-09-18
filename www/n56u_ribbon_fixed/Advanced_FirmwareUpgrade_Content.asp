@@ -195,7 +195,7 @@ $j.fn.fileName = function(){
                                         </tr>
                                         <tr>
                                             <td colspan="2">
-                                                <center><input type="button" name="button" class="btn btn-primary" style="width: 219px;" onclick="fwUpload();" value="<#CTL_upload#>" /></center>
+                                                <center><input type="button" name="button" class="btn btn-primary" onclick="fwUpload();" value="<#CTL_upload#>" /></center>
                                             </td>
                                         </tr>
                                     </table>

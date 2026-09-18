@@ -912,7 +912,7 @@ function getHash(){
                                 <tr id="row_vpns_ov_ncp_clist" style="display:none">
                                     <th><#OVPN_NCP_clist#></th>
                                     <td>
-                                        <input type="text" maxlength="256" size="15" name="vpns_ov_ncp_clist" class="input" style="width: 286px;" value="<% nvram_get_x("", "vpns_ov_ncp_clist"); %>" onkeypress="return is_string(this,event);"/>
+                                        <input type="text" maxlength="256" size="15" name="vpns_ov_ncp_clist" class="input"  value="<% nvram_get_x("", "vpns_ov_ncp_clist"); %>" onkeypress="return is_string(this,event);"/>
                                     </td>
                                 </tr>
                                 <tr id="row_vpns_ov_compress" style="display:none">
@@ -1034,10 +1034,10 @@ function getHash(){
                                     <th><#VPNS_VPool#></th>
                                     <td>
                                         <span id="lanip1"></span>
-                                        <input type="text" maxlength="3" size="2" name="vpns_cli0" value="<% nvram_get_x("", "vpns_cli0"); %>" style="width: 25px;" onKeyPress="return is_number(this,event);"/>
+                                        <input type="text" maxlength="3" size="2" name="vpns_cli0" value="<% nvram_get_x("", "vpns_cli0"); %>"  onKeyPress="return is_number(this,event);"/>
                                         <span>&nbsp;~&nbsp;</span>
                                         <span id="lanip2"></span>
-                                        <input type="text" maxlength="3" size="2" name="vpns_cli1" value="<% nvram_get_x("", "vpns_cli1"); %>" style="width: 25px;" onKeyPress="return is_number(this,event);"/>
+                                        <input type="text" maxlength="3" size="2" name="vpns_cli1" value="<% nvram_get_x("", "vpns_cli1"); %>"  onKeyPress="return is_number(this,event);"/>
                                     </td>
                                 </tr>
                                 <tr id="row_pool_view">
@@ -1051,7 +1051,7 @@ function getHash(){
                             </table>
                             <table class="table">
                                 <tr>
-                                    <td style="border: 0 none; padding: 0px;"><center><input name="button" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                    <td style="border: 0 none; padding: 0px;"><center><input name="button" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                 </tr>
                             </table>
                         </div>
@@ -1061,11 +1061,11 @@ function getHash(){
                                 <tr>
                                     <td align="right" style="border-top: 0 none; padding-top: 0px; text-align:right;">
                                         <span class="caption-bold">Server CN:</span>
-                                        <input id="vpns_gen_cn" type="text" maxlength="32" size="10" style="width: 105px;" placeholder="OpenVPN Server" onKeyPress="return is_string(this,event);"/>
+                                        <input id="vpns_gen_cn" type="text" maxlength="32" size="10"  placeholder="OpenVPN Server" onKeyPress="return is_string(this,event);"/>
                                     </td>
                                     <td align="left" style="border-top: 0 none; padding-top: 0px;">
                                         <span class="caption-bold">Bits:</span>
-                                        <select id="vpns_gen_rb" class="input" style="width: 108px;">
+                                        <select id="vpns_gen_rb" class="input" >
                                             <option value="1024">RSA 1024 (*)</option>
                                             <option value="2048">RSA 2048</option>
                                             <option value="4096">RSA 4096</option>
@@ -1078,20 +1078,20 @@ function getHash(){
                                     </td>
                                     <td align="left" style="border-top: 0 none; padding-top: 0px;">
                                         <span class="caption-bold">Days valid:</span>
-                                        <input id="vpns_gen_dv" type="text" maxlength="5" size="10" style="width: 35px;" value="365" onKeyPress="return is_number(this,event);"/>
+                                        <input id="vpns_gen_dv" type="text" maxlength="5" size="10"  value="365" onKeyPress="return is_number(this,event);"/>
                                     </td>
                                     <td align="left" style="border-top: 0 none; padding-top: 0px;">
-                                        <input id="vpns_gen_bn" type="button" class="btn" style="width: 145px; outline:0" onclick="create_server_cert();" value="<#VPNS_GenNew#>"/>
+                                        <input id="vpns_gen_bn" type="button" class="btn"  onclick="create_server_cert();" value="<#VPNS_GenNew#>"/>
                                     </td>
                                 </tr>
                                 <tr id="row_vpns_exp" style="display:none">
                                     <td align="right" style="text-align:right;">
                                         <span class="caption-bold">Client CN:</span>
-                                        <input id="vpns_exp_cn" type="text" maxlength="32" size="10" style="width: 105px;" placeholder="client@ovpn" onKeyPress="return is_string(this,event);"/>
+                                        <input id="vpns_exp_cn" type="text" maxlength="32" size="10"  placeholder="client@ovpn" onKeyPress="return is_string(this,event);"/>
                                     </td>
                                     <td align="left">
                                         <span class="caption-bold">Bits:</span>
-                                        <select id="vpns_exp_rb" class="input" style="width: 108px;">
+                                        <select id="vpns_exp_rb" class="input" >
                                             <option value="1024">RSA 1024 (*)</option>
                                             <option value="2048">RSA 2048</option>
                                             <option value="4096">RSA 4096</option>
@@ -1104,10 +1104,10 @@ function getHash(){
                                     </td>
                                     <td align="left">
                                         <span class="caption-bold">Days valid:</span>
-                                        <input id="vpns_exp_dv" type="text" maxlength="5" size="10" style="width: 35px;" value="365" onKeyPress="return is_number(this,event);"/>
+                                        <input id="vpns_exp_dv" type="text" maxlength="5" size="10"  value="365" onKeyPress="return is_number(this,event);"/>
                                     </td>
                                     <td align="left">
-                                        <input id="vpns_exp_bn" type="button" class="btn" style="width: 145px; outline:0" onclick="export_client_ovpn('');" value="<#VPNS_Export#>"/>
+                                        <input id="vpns_exp_bn" type="button" class="btn"  onclick="export_client_ovpn('');" value="<#VPNS_Export#>"/>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1154,7 +1154,7 @@ function getHash(){
                             </table>
                             <table class="table">
                                 <tr>
-                                    <td style="border: 0 none;"><center><input name="button2" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                    <td style="border: 0 none;"><center><input name="button2" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                 </tr>
                             </table>
                         </div>
@@ -1178,11 +1178,11 @@ function getHash(){
                                     </td>
                                     <td>
                                         <span id="vpnip3"></span>
-                                        <input type="text" size="2" maxlength="3" style="width: 25px;" name="vpns_addr_x_0" value="<% nvram_get_x("", "vpns_addr_x_0"); %>" onkeypress="return is_number(this,event);" />
+                                        <input type="text" size="2" maxlength="3"  name="vpns_addr_x_0" value="<% nvram_get_x("", "vpns_addr_x_0"); %>" onkeypress="return is_number(this,event);" />
                                     </td>
                                     <td>
-                                        <input type="text" size="14" maxlength="15" style="width: 90px;" name="vpns_rnet_x_0" value="<% nvram_get_x("", "vpns_rnet_x_0"); %>" onkeypress="return is_ipaddr(this,event);" />&nbsp;/
-                                        <input type="text" size="14" maxlength="15" style="width: 90px;" name="vpns_rmsk_x_0" value="<% nvram_get_x("", "vpns_rmsk_x_0"); %>" onkeypress="return is_ipaddr(this,event);" />
+                                        <input type="text" size="14" maxlength="15"  name="vpns_rnet_x_0" value="<% nvram_get_x("", "vpns_rnet_x_0"); %>" onkeypress="return is_ipaddr(this,event);" />&nbsp;/
+                                        <input type="text" size="14" maxlength="15"  name="vpns_rmsk_x_0" value="<% nvram_get_x("", "vpns_rmsk_x_0"); %>" onkeypress="return is_ipaddr(this,event);" />
                                     </td>
                                     <td>
                                         <button class="btn" type="submit" onclick="return markGroupACL(this, 50, ' Add ');" name="VPNSACLList2"><i class="icon icon-plus"></i></button>
@@ -1196,7 +1196,7 @@ function getHash(){
                             </table>
                             <table class="table">
                                 <tr>
-                                    <td style="border: 0 none;"><center><input name="button3" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                    <td style="border: 0 none;"><center><input name="button3" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                 </tr>
                             </table>
                         </div>

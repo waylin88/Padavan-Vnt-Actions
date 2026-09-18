@@ -186,7 +186,7 @@ function showLANIPList(){
 		code += '<div style="font-weight:bold;cursor:pointer;" onclick="rescan();"><#AP_survey#>&nbsp;</div>';
 	}
 	else{
-		code += '<div style="width: 207px"><center><img style="padding-top: 4px; display: block;" src="/bootstrap/img/ajax-loader.gif"></center></div>';
+		code += '<div ><center><img style="padding-top: 4px; display: block;" src="/bootstrap/img/ajax-loader.gif"></center></div>';
 	}
 
 	code +='<!--[if lte IE 6.5]><iframe class="hackiframe_wdssurvey"></iframe><![endif]-->';
@@ -335,8 +335,7 @@ function hideClients_Block(){
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this, 0, 7);"><#WLANConfig11b_x_PSKKey_itemname#></a></th>
                                             <td>
                                                 <div class="input-append">
-                                                    <input type="password" name="wl_sta_wpa_psk" id="wl_sta_wpa_psk" maxlength="64" size="32" value="" style="width: 175px;">
-                                                    <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('wl_sta_wpa_psk')"><i class="icon-eye-close"></i></button>
+                                                    <input type="text" name="wl_sta_wpa_psk" id="wl_sta_wpa_psk" maxlength="64" size="32" value="">
                                                 </div>
                                             </td>
                                         </tr>
@@ -345,7 +344,7 @@ function hideClients_Block(){
                                     <table class="table">
                                         <tr>
                                             <td style="border-top: 0 none; text-align: center;">
-                                                <input class="btn btn-primary" style="width: 219px" type="button" value="<#CTL_apply#>" onclick="applyRule()" />
+                                                <input class="btn btn-primary" type="button" value="<#CTL_apply#>" onclick="applyRule()" />
                                             </td>
                                         </tr>
                                     </table>

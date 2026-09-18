@@ -329,7 +329,7 @@ function switchPage(id){
                                     <div id="tabMenu" class="submenuBlock"></div>
 
                                     <div align="right" style="margin: 3px 8px 0px 0px;">
-                                        <select id="sel_netif" style="width: 200px; margin-bottom: 5px;" onchange="tabSelect(this.value);">
+                                        <select id="sel_netif" onchange="tabSelect(this.value);">
                                         </select>
                                     </div>
 
@@ -346,7 +346,7 @@ function switchPage(id){
                                         <table style="width: 100%; margin-top: 6px; margin-bottom: 6px;">
                                             <tr>
                                                 <td width="100%" align="center" style="text-align: center">
-                                                    <div id="net_chart" style="width: 670px; padding-left: 5px;"></div>
+                                                    <div id="net_chart" ></div>
                                                 </td>
                                             </tr>
                                         </table>

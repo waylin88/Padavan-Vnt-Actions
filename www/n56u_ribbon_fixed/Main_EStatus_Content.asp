@@ -140,7 +140,7 @@ function set_mib_data(){
                                         </tr>
                                         <tr>
                                             <td style="text-align: right; padding-bottom: 0px;">
-                                                <input type="button" onClick="set_mib_data();" value="<#CTL_refresh#>" class="btn btn-primary" style="width: 219px;">
+                                                <input type="button" onClick="set_mib_data();" value="<#CTL_refresh#>" class="btn btn-primary" >
                                             </td>
                                         </tr>
                                     </table>

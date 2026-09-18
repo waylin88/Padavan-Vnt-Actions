@@ -430,10 +430,7 @@ function getHash(){
                                 <tr id="row_vpnc_pass">
                                     <th><#ISP_Authentication_pass#></th>
                                     <td>
-                                        <div class="input-append">
-                                            <input type="password" maxlength="64" class="input" size="32" name="vpnc_pass" id="vpnc_pass" style="width: 175px;" value="<% nvram_get_x("", "vpnc_pass"); %>"/>
-                                            <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('vpnc_pass')"><i class="icon-eye-close"></i></button>
-                                        </div>
+                                        <input type="text" maxlength="64" class="input" size="32" name="vpnc_pass" id="vpnc_pass"  value="<% nvram_get_x("", "vpnc_pass"); %>"/>
                                     </td>
                                 </tr>
                                 <tr id="row_vpnc_auth">
@@ -517,7 +514,7 @@ function getHash(){
                                 <tr id="row_vpnc_ov_ncp_clist" style="display:none">
                                     <th><#OVPN_NCP_clist#></th>
                                     <td>
-                                        <input type="text" maxlength="256" size="15" name="vpnc_ov_ncp_clist" class="input" style="width: 286px;" value="<% nvram_get_x("", "vpnc_ov_ncp_clist"); %>" onkeypress="return is_string(this,event);"/>
+                                        <input type="text" maxlength="256" size="15" name="vpnc_ov_ncp_clist" class="input"  value="<% nvram_get_x("", "vpnc_ov_ncp_clist"); %>" onkeypress="return is_string(this,event);"/>
                                     </td>
                                 </tr>
                                 <tr id="row_vpnc_ov_compress" style="display:none">
@@ -568,7 +565,7 @@ function getHash(){
                                 <tr>
                                     <th width="50%"><#VPNC_SFW#></th>
                                     <td>
-                                        <select name="vpnc_sfw" class="input" style="width: 320px;">
+                                        <select name="vpnc_sfw" class="input" >
                                             <option value="1" <% nvram_match_x("", "vpnc_sfw", "1","selected"); %>><#VPNC_SFW_Item1#></option>
                                             <option value="3" <% nvram_match_x("", "vpnc_sfw", "3","selected"); %>><#VPNC_SFW_Item3#></option>
                                             <option value="0" <% nvram_match_x("", "vpnc_sfw", "0","selected"); %>><#VPNC_SFW_Item0#></option>
@@ -611,14 +608,14 @@ function getHash(){
                                 <tr>
                                     <th width="50%"><#VPNC_RNet#></th>
                                     <td>
-                                        <input type="text" maxlength="15" size="14" name="vpnc_rnet" style="width: 94px;" value="<% nvram_get_x("", "vpnc_rnet"); %>" onKeyPress="return is_ipaddr(this,event);" />&nbsp;/
-                                        <input type="text" maxlength="15" size="14" name="vpnc_rmsk" style="width: 94px;" value="<% nvram_get_x("", "vpnc_rmsk"); %>" onKeyPress="return is_ipaddr(this,event);" />
+                                        <input type="text" maxlength="15" size="14" name="vpnc_rnet"  value="<% nvram_get_x("", "vpnc_rnet"); %>" onKeyPress="return is_ipaddr(this,event);" />&nbsp;/
+                                        <input type="text" maxlength="15" size="14" name="vpnc_rmsk"  value="<% nvram_get_x("", "vpnc_rmsk"); %>" onKeyPress="return is_ipaddr(this,event);" />
                                     </td>
                                 </tr>
                             </table>
                             <table class="table">
                                 <tr>
-                                    <td style="border: 0 none; padding: 0px;"><center><input name="button" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                    <td style="border: 0 none; padding: 0px;"><center><input name="button" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                 </tr>
                             </table>
                         </div>
@@ -652,7 +649,7 @@ function getHash(){
                             </table>
                             <table class="table">
                                 <tr>
-                                    <td style="border: 0 none;"><center><input name="button2" type="button" class="btn btn-primary" style="width: 219px" onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
+                                    <td style="border: 0 none;"><center><input name="button2" type="button" class="btn btn-primary"  onclick="applyRule();" value="<#CTL_apply#>"/></center></td>
                                 </tr>
                             </table>
                         </div>

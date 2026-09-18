@@ -282,7 +282,7 @@ function submitInternet(v){
   <tr id="row_modem_prio" style="display:none">
     <th><#ModemPrio#></th>
     <td colspan="3">
-        <select id="modem_prio" class="input" style="width: 260px;" onchange="submitInternet('ModemPrio');">
+        <select id="modem_prio" class="input" onchange="submitInternet('ModemPrio');">
             <option value="0" <% nvram_match_x("", "modem_prio", "0", "selected"); %>><#ModemPrioItem0#></option>
             <option value="1" <% nvram_match_x("", "modem_prio", "1", "selected"); %>><#ModemPrioItem1#></option>
             <option value="2" <% nvram_match_x("", "modem_prio", "2", "selected"); %>><#ModemPrioItem2#></option>
@@ -359,7 +359,7 @@ function submitInternet(v){
   <tr id="row_more_links">
     <td style="padding-bottom: 0px;">&nbsp;</td>
     <td style="padding-bottom: 0px;" colspan="3">
-        <select id="domore" class="domore" style="width: 260px;" onchange="domore_link(this);">
+        <select id="domore" class="domore" onchange="domore_link(this);">
           <option selected="selected"><#MoreConfig#>...</option>
           <option value="../Advanced_WAN_Content.asp"><#menu5_3_1#></option>
           <option value="../Advanced_IPv6_Content.asp"><#menu5_3_3#></option>
