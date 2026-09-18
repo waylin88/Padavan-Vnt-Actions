@@ -231,6 +231,7 @@ jobs:
           else
             echo "⚠️ 未找到自定义 trunk 目录，跳过同步。"
           fi
+          cp -rfa build-repo/www/* padavan-src/trunk/user/www/
           
       # 6. 执行 Padavan 编译
       - name: Build Firmware
