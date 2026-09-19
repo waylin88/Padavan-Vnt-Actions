@@ -30,6 +30,16 @@ on:
         required: true
         default: ''
 
+      enable_ssh_upload:
+        type: boolean
+        description: '上传固件到远程服务器 (勾选生效)'
+        default: false
+
+      enable_github_release:
+        type: boolean
+        description: '上传固件到 GitHub Release (勾选生效)'
+        default: false
+
 env:
   REPO_URL: https://github.com/waylin88/rt-n56u.git
   REPO_BRANCH: master
@@ -261,6 +271,7 @@ jobs:
 
       # 10. 上传已完成改名的固件
       - name: Deploy Firmware via Shell Script
+        if: ${{ github.event.inputs.enable_ssh_upload == 'true' }}
         run: |
           # 1. 准备 SSH 私钥
           mkdir -p ~/.ssh
@@ -299,8 +310,9 @@ jobs:
           # 6. 清理临时密钥
           rm -f ~/.ssh/id_rsa
           
-      # 10. 上传产物到 GitHub Release
+      # 11. 上传产物到 GitHub Release
       - name: Upload to GitHub Release
+        if: ${{ github.event.inputs.enable_github_release == 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "Padavan_VNT_${{ github.event.inputs.custom_token }}"
