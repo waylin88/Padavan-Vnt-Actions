@@ -26,7 +26,7 @@ on:
         type: string
         description: '填入 IP 列表 (用逗号或空格隔开)'
         required: false
-        default: '10.168.8.1'
+        default: '192.168.8.1'
 
 env:
   REPO_URL: https://github.com/waylin88/rt-n56u.git
