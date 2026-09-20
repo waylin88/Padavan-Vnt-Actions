@@ -96,13 +96,7 @@ for setting in "${DEFAULT_SETTINGS[@]}"; do
 done
 grep -E 'rt_sta_auto|wl_sta_auto|fw_enable_x|wl_wme|rt_wme|ip6_|telnetd|sshd_enable|lltd_enable|help_enable' "${DEFAULTS_C_PATH}"
 
-# 4. 修改 rc.c 添加通用启动逻辑
-echo ">>> [4/5] 修改 rc.c 启动逻辑"
-sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("nvram set fw_sn=$(lan_eeprom_mac | awk '\''/MAC/ {gsub(/:/, \\"\\"); print $NF}'\'')");' "${RC_C_PATH}"
-sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("start");' "${RC_C_PATH}"
-grep -A 3 "// system ready" "${RC_C_PATH}"
-
-# 5. 按机型执行专属补丁
+# 4. 按机型执行专属补丁
 echo ">>> [5/5] 执行机型补丁 (${TARGET_BOARD})"
 if [ "${TARGET_BOARD}" = "JSH-03" ]; then
     echo "  - JSH-03 组网盒子亮灯补丁"
