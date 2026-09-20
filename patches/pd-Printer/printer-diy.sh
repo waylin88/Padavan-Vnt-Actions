@@ -42,3 +42,10 @@ grep '^dir_y.*printer-script\|^dir_y.*virtualhere\|^dir_y.*vn-link-cli' "${MAKEF
 echo "=========================================="
 echo ">>> Printer 模块安装完成 ✅"
 echo "=========================================="
+
+# 屏蔽 BusyBox DHCPv6 的日志噪音
+echo ">>> 屏蔽 BusyBox DHCPv6 日志噪音"
+sed -i 's/bb_info_msg("status code for/if (0) bb_info_msg("status code for/' \
+    "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_ia.c"
+sed -i 's/bb_info_msg("unexpected DHCP6 option/if (0) bb_info_msg("unexpected DHCP6 option/' \
+    "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_common.c"
