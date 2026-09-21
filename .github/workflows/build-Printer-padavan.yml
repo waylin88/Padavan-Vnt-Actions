@@ -28,10 +28,23 @@ on:
         required: false
         default: '192.168.8.1'
 
+      enable_ssh_upload:
+        type: boolean
+        description: '上传固件到远程服务器 (勾选生效)'
+        default: false
+
+      enable_github_release:
+        type: boolean
+        description: '上传固件到 GitHub Release (勾选生效)'
+        default: false
+
 env:
   REPO_URL: https://github.com/waylin88/rt-n56u.git
   REPO_BRANCH: webui-dev
   TZ: Asia/Shanghai
+
+permissions:
+  contents: write
 
 jobs:
   parse-inputs:
@@ -89,3 +102,137 @@ jobs:
           cd padavan-src/toolchain-mipsel
           sh ./dl_toolchain.sh
 
+      # 5. 执行 diy.sh 自定义脚本
+      - name: 执行diy.sh脚本
+        env:
+          TARGET_BOARD: ${{ github.event.inputs.target_board }}
+        run: |
+          chmod +x build-repo/diy.sh
+          ./build-repo/diy.sh
+
+      # 6. 执行 printer-diy.sh 打印机模块脚本
+      - name: 执行printer-diy.sh脚本
+        run: |
+          chmod +x build-repo/patches/pd-Printer/printer-diy.sh
+          ./build-repo/patches/pd-Printer/printer-diy.sh
+
+      # 7. 修改默认 LAN IP
+      - name: 修改默认 LAN IP
+        run: |
+          TARGET_IP="${{ matrix.ip }}"
+          DEF_H="padavan-src/trunk/user/shared/defaults.h"
+
+          update_lan_ip_config() {
+            local target_ip="$1"
+            local h_file="$2"
+
+            local net_prefix
+            net_prefix=$(echo "$target_ip" | awk -F. '{print $1"."$2"."$3}')
+
+            echo ">>> 正在更新 LAN IP 配置为: ${target_ip} (网段: ${net_prefix}.x)"
+            sed -i -E "s/#define DEF_LAN_ADDR\s+\".*\"/#define DEF_LAN_ADDR\t\t\"${target_ip}\"/g" "$h_file"
+            sed -i -E "s/#define DEF_LAN_DHCP_BEG\s+\".*\"/#define DEF_LAN_DHCP_BEG\t\"${net_prefix}.100\"/g" "$h_file"
+            sed -i -E "s/#define DEF_LAN_DHCP_END\s+\".*\"/#define DEF_LAN_DHCP_END\t\"${net_prefix}.244\"/g" "$h_file"
+          }
+
+          if [ -f "$DEF_H" ]; then
+            if [ "$TARGET_IP" != "default" ]; then
+              update_lan_ip_config "$TARGET_IP" "$DEF_H"
+            fi
+            echo ">>> defaults.h LAN 修改结果验证："
+            grep -E "DEF_LAN_" "$DEF_H"
+          else
+            echo "❌ 错误: 未找到 $DEF_H 文件！"
+            exit 1
+          fi
+
+      # 8. 执行 Padavan 编译
+      - name: Build Firmware
+        run: |
+           cd padavan-src/trunk
+           chmod +x ./build_firmware
+           chmod +x ./clear_tree
+           fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
+
+      # 9. 编译完成后统一修改固件名称并收集产物
+      - name: Rename Firmware Files
+        run: |
+          TARGET_IP="${{ matrix.ip }}"
+          TARGET_BOARD="${{ github.event.inputs.target_board }}"
+          IMAGE_DIR="padavan-src/trunk/images"
+          OUTPUT_DIR="${GITHUB_WORKSPACE}/output_files"
+
+          mkdir -p "$OUTPUT_DIR"
+          cd "$IMAGE_DIR"
+          shopt -s nullglob
+          firmware_files=(*.trx)
+
+          if [ "${#firmware_files[@]}" -eq 0 ]; then
+            echo "错误: 未找到 .trx 固件文件！"
+            exit 1
+          fi
+
+          for file in "${firmware_files[@]}"; do
+            BASE_NAME="${file%.*}"
+            PREFIX="${BASE_NAME%-*}"
+            NEW_NAME="${PREFIX}-Printer-${TARGET_BOARD}-${TARGET_IP}.trx"
+
+            echo ">>> 修改固件名称: $file -> $NEW_NAME"
+            mv -- "$file" "$NEW_NAME"
+            cp -v -- "$NEW_NAME" "$OUTPUT_DIR/$NEW_NAME"
+          done
+
+      # 10. 上传固件到 Actions Artifacts
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Padavan-Printer-${{ github.event.inputs.target_board }}-${{ matrix.ip }}"
+          path: output_files/*.trx
+
+      # 11. 上传固件到远程服务器 (SSH)
+      - name: Deploy Firmware via SSH
+        if: ${{ github.event.inputs.enable_ssh_upload == 'true' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          REMOTE_USER="${{ secrets.SERVER_USER }}"
+          REMOTE_HOST="${{ secrets.SERVER_HOST }}"
+          REMOTE_PORT="${{ secrets.SERVER_PORT }}"
+          TARGET_BOARD="${{ github.event.inputs.target_board }}"
+          REMOTE_PATH="/www/wwwroot/printer_http/firmware/${TARGET_BOARD}/"
+
+          ssh -o StrictHostKeyChecking=no -p "$REMOTE_PORT" "$REMOTE_USER@$REMOTE_HOST" "mkdir -p '$REMOTE_PATH'"
+
+          cd "${GITHUB_WORKSPACE}/output_files"
+          for file in *.trx; do
+            if [ -f "$file" ]; then
+              echo ">>> 上传固件: $file"
+              scp -o StrictHostKeyChecking=no -P "$REMOTE_PORT" "$file" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/$file"
+
+              if [ $? -eq 0 ]; then
+                echo "文件上传成功！路径: ${REMOTE_PATH}${file}"
+              else
+                echo "文件上传失败。" && exit 1
+              fi
+            fi
+          done
+
+          rm -f ~/.ssh/id_rsa
+
+      # 12. 上传产物到 GitHub Release
+      - name: Upload to GitHub Release
+        if: ${{ github.event.inputs.enable_github_release == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "Padavan_Printer_${{ github.event.inputs.target_board }}"
+          name: "Padavan-Printer ${{ github.event.inputs.target_board }}"
+          body: |
+            ### 固件发布说明
+            - **目标机型**: ${{ github.event.inputs.target_board }}
+            - **编译 IP**: ${{ matrix.ip }}
+            - **构建时间**: ${{ github.event.repository.updated_at }}
+          files: output_files/*.trx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
