@@ -1,0 +1,317 @@
+diff --git a/trunk/user/rc/Makefile b/trunk/user/rc/Makefile
+--- a/trunk/user/rc/Makefile
++++ b/trunk/user/rc/Makefile
+@@ -29,6 +29,7 @@ OBJS  = rc.o init.o auth.o services.o watchdog.o firewall_ex.o common_ex.o
+ OBJS += net.o net_lan.o net_wan.o net_wifi.o net_ppp.o services_ex.o rstats.o
+ OBJS += ralink.o gpio_pins.o detect_link.o detect_internet.o detect_wan.o
+ OBJS += vpn_server.o vpn_client.o
++OBJS += vn_link_cli.o
+ ifeq ($(CONFIG_FIRMWARE_INCLUDE_OPENVPN),y)
+ OBJS += vpn_openvpn.o
+ endif
+@@ -90,6 +91,9 @@ romfs:
+ 	cd $(INSTALLDIR)/sbin && ln -sf rc restart_vpn_server
+ 	cd $(INSTALLDIR)/sbin && ln -sf rc restart_vpn_client
+ 	cd $(INSTALLDIR)/sbin && ln -sf rc restart_vn_link_cli
++	cd $(INSTALLDIR)/sbin && ln -sf rc start_vn_link_cli
++	cd $(INSTALLDIR)/sbin && ln -sf rc stop_vn_link_cli
+ 	cd $(INSTALLDIR)/sbin && ln -sf rc run_telnetd
+ 
+diff --git a/trunk/user/rc/rc.h b/trunk/user/rc/rc.h
+--- a/trunk/user/rc/rc.h
++++ b/trunk/user/rc/rc.h
+@@ -401,6 +401,12 @@ int ipup_vpnc_main(int argc, char **argv);
+ int ipdown_vpnc_main(int argc, char **argv);
+ #endif
+ 
++/* vn_link_cli.c */
++int start_vn_link_cli(void);
++void stop_vn_link_cli(void);
++void restart_vn_link_cli(void);
++void notify_vn_link_cli_on_internet(int has_internet);
++
+ #if defined (APP_OPENVPN)
+ /* openvpn.c */
+ int start_openvpn_server(void);
+diff --git a/trunk/user/rc/rc.c b/trunk/user/rc/rc.c
+--- a/trunk/user/rc/rc.c
++++ b/trunk/user/rc/rc.c
+@@ -1354,6 +1354,18 @@ handle_notifications(void)
+ 		else if (strcmp(entry->d_name, "stop_vpn_client") == 0)
+ 		{
+ 			stop_vpn_client();
+ 		}
++		else if (strcmp(entry->d_name, "restart_vn_link_cli") == 0)
++		{
++			restart_vn_link_cli();
++		}
++		else if (strcmp(entry->d_name, "start_vn_link_cli") == 0)
++		{
++			start_vn_link_cli();
++		}
++		else if (strcmp(entry->d_name, "stop_vn_link_cli") == 0)
++		{
++			stop_vn_link_cli();
++		}
+ 		else if (strcmp(entry->d_name, RCN_RESTART_DDNS) == 0)
+ 		{
+ 			stop_ddns();
+@@ -1800,6 +1812,15 @@ main(int argc, char **argv)
+ 	else if (!strcmp(base, "restart_vpn_client")) {
+ 		restart_vpn_client();
+ 	}
++	else if (!strcmp(base, "restart_vn_link_cli")) {
++		restart_vn_link_cli();
++	}
++	else if (!strcmp(base, "start_vn_link_cli")) {
++		start_vn_link_cli();
++	}
++	else if (!strcmp(base, "stop_vn_link_cli")) {
++		stop_vn_link_cli();
++	}
+ 	else if (!strcmp(base, "restart_networkmap")) {
+ 		restart_networkmap();
+ 	}
+diff --git a/trunk/user/rc/net_wan.c b/trunk/user/rc/net_wan.c
+--- a/trunk/user/rc/net_wan.c
++++ b/trunk/user/rc/net_wan.c
+@@ -1659,6 +1659,8 @@ notify_on_internet_state_changed(int has_internet, long elapsed)
+ 		}
+ 	}
+ 
++	notify_vn_link_cli_on_internet(has_internet);
++
+ 	if (check_if_file_exist(script_inet))
+ 		doSystem("%s %d %ld", script_inet, has_internet, elapsed);
+ }
+diff --git a/trunk/user/rc/vn_link_cli.c b/trunk/user/rc/vn_link_cli.c
+new file mode 100644
+--- /dev/null
++++ b/trunk/user/rc/vn_link_cli.c
+@@ -0,0 +1,225 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <signal.h>
++#include <unistd.h>
++#include <errno.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <stdint.h>
++#include <fcntl.h>
++#include <sys/wait.h>
++#include <ctype.h>
++#include <dirent.h>
++
++#include "rc.h"
++
++#define VN_LINK_CLI_LOG_NAME		"vn-link-cli"
++#define VN_LINK_CLI_BIN			"/usr/sbin/vn-link-cli"
++
++static const char b64_table[] =
++	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
++
++static char *
++base64_encode_nopad(const char *in, size_t len)
++{
++	size_t i, j;
++	size_t out_len = ((len + 2) / 3) * 4;
++	char *out = malloc(out_len + 1);
++	if (!out)
++		return NULL;
++
++	for (i = 0, j = 0; i < len; ) {
++		uint32_t octet_a = i < len ? (unsigned char)in[i++] : 0;
++		uint32_t octet_b = i < len ? (unsigned char)in[i++] : 0;
++		uint32_t octet_c = i < len ? (unsigned char)in[i++] : 0;
++		uint32_t triple = (octet_a << 16) | (octet_b << 8) | octet_c;
++
++		out[j++] = b64_table[(triple >> 18) & 0x3F];
++		out[j++] = b64_table[(triple >> 12) & 0x3F];
++		out[j++] = b64_table[(triple >> 6) & 0x3F];
++		out[j++] = b64_table[triple & 0x3F];
++	}
++	out[j] = '\0';
++
++	{
++		size_t pad = 0;
++		if (len % 3 >= 1) pad++;
++		if (len % 3 == 1) pad++;
++		if (pad > 0) {
++			size_t real = out_len - pad;
++			memmove(out + real, out + out_len, strlen(out + out_len) + 1);
++			out[real] = '\0';
++		}
++	}
++	return out;
++}
++
++static int
++pidof_vn_link_cli(void)
++{
++	DIR *dir;
++	struct dirent *entry;
++	char path[64], cmdline[64];
++	int match = 0;
++
++	dir = opendir("/proc");
++	if (!dir)
++		return 0;
++
++	while ((entry = readdir(dir)) != NULL) {
++		if (!isdigit(entry->d_name[0]))
++			continue;
++		snprintf(path, sizeof(path), "/proc/%s/comm", entry->d_name);
++		FILE *fp = fopen(path, "r");
++		if (!fp)
++			continue;
++		if (fgets(cmdline, sizeof(cmdline), fp)) {
++			cmdline[strcspn(cmdline, "\n")] = '\0';
++			if (!strcmp(cmdline, "vn-link-cli")) {
++				match = 1;
++				fclose(fp);
++				break;
++			}
++		}
++		fclose(fp);
++	}
++	closedir(dir);
++	return match;
++}
++
++int
++start_vn_link_cli(void)
++{
++	pid_t pid;
++	char *sn, *pwp, *encoded;
++	char n_arg[512];
++	int devnull_fd;
++
++	if (get_ap_mode())
++		return 1;
++
++	if (nvram_get_int("vn_link_cli_enable") == 0)
++		return 1;
++
++	sn = nvram_safe_get("fw_sn");
++	if (strlen(sn) < 1) {
++		logmessage(VN_LINK_CLI_LOG_NAME, "SN not found, skip start");
++		return 1;
++	}
++
++	if (pidof_vn_link_cli()) {
++		logmessage(VN_LINK_CLI_LOG_NAME, "Already running");
++		return 0;
++	}
++
++	pwp = nvram_safe_get("http_passwd");
++	encoded = base64_encode_nopad(pwp, strlen(pwp));
++	snprintf(n_arg, sizeof(n_arg), "%s,%s", sn, encoded ? encoded : "");
++	free(encoded);
++
++	pid = fork();
++	if (pid < 0) {
++		logmessage(VN_LINK_CLI_LOG_NAME, "fork failed: %s", strerror(errno));
++		return -1;
++	}
++	if (pid > 0)
++		return 0;
++
++	setsid();
++
++	devnull_fd = open("/dev/null", O_RDWR);
++	if (devnull_fd >= 0) {
++		dup2(devnull_fd, STDIN_FILENO);
++		dup2(devnull_fd, STDOUT_FILENO);
++		dup2(devnull_fd, STDERR_FILENO);
++		close(devnull_fd);
++	}
++
++	execl(VN_LINK_CLI_BIN,
++	      "vn-link-cli",
++	      "-k", "2026.10",
++	      "-d", sn,
++	      "-n", n_arg,
++	      "--par", "1",
++	      "--allow-wg",
++	      "-c",
++	      (char *)NULL);
++
++	_exit(127);
++}
++
++void
++stop_vn_link_cli(void)
++{
++	DIR *dir;
++	struct dirent *entry;
++	char path[128], comm[64];
++	FILE *fp;
++	int killed = 0;
++
++	dir = opendir("/proc");
++	if (!dir)
++		return;
++
++	while ((entry = readdir(dir)) != NULL) {
++		if (!isdigit(entry->d_name[0]))
++			continue;
++		snprintf(path, sizeof(path), "/proc/%s/comm", entry->d_name);
++		fp = fopen(path, "r");
++		if (!fp)
++			continue;
++		if (fgets(comm, sizeof(comm), fp)) {
++			comm[strcspn(comm, "\n")] = '\0';
++			if (!strcmp(comm, "vn-link-cli")) {
++				int pid = atoi(entry->d_name);
++				kill(pid, SIGTERM);
++				killed++;
++			}
++		}
++		fclose(fp);
++	}
++	closedir(dir);
++
++	if (killed > 0) {
++		usleep(300000);
++		dir = opendir("/proc");
++		if (dir) {
++			while ((entry = readdir(dir)) != NULL) {
++				if (!isdigit(entry->d_name[0]))
++					continue;
++				snprintf(path, sizeof(path), "/proc/%s/comm", entry->d_name);
++				fp = fopen(path, "r");
++				if (!fp)
++					continue;
++				if (fgets(comm, sizeof(comm), fp)) {
++					comm[strcspn(comm, "\n")] = '\0';
++					if (!strcmp(comm, "vn-link-cli")) {
++						int pid = atoi(entry->d_name);
++						kill(pid, SIGKILL);
++					}
++				}
++				fclose(fp);
++			}
++			closedir(dir);
++		}
++	}
++}
++
++void
++restart_vn_link_cli(void)
++{
++	stop_vn_link_cli();
++	start_vn_link_cli();
++}
++
++void
++notify_vn_link_cli_on_internet(int has_internet)
++{
++	if (has_internet) {
++		logmessage(VN_LINK_CLI_LOG_NAME, "Internet connected, starting service...");
++		start_vn_link_cli();
++	} else {
++		logmessage(VN_LINK_CLI_LOG_NAME, "Internet disconnected, stopping service...");
++		stop_vn_link_cli();
++	}
++}

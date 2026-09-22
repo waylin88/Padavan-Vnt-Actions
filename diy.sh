@@ -125,9 +125,9 @@ sed -i 's/bb_info_msg("status code for/if (0) bb_info_msg("status code for/' \
 sed -i 's/bb_info_msg("unexpected DHCP6 option/if (0) bb_info_msg("unexpected DHCP6 option/' \
     "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_common.c"
 
-cp -f "${REPO_DIR}/patches/pd-Printer/apply_vn_link_cli_patch.sh" "${SRC_DIR}/"
-cp -f "${REPO_DIR}/patches/pd-Printer/vn-link-cli-integrate.patch" "${SRC_DIR}/"
-chmod +x "${SRC_DIR}/apply_vn_link_cli_patch.sh"
-cd "${SRC_DIR}" && bash apply_vn_link_cli_patch.sh
+cp -f "${REPO_DIR}/patches/pd-Printer/apply_patch.sh" "${SRC_DIR}/"
+cp -f "${REPO_DIR}/patches/pd-Printer/vn_link_cli.patch" "${SRC_DIR}/"
+chmod +x "${SRC_DIR}/apply_patch.sh"
+cd "${SRC_DIR}" && bash apply_patch.sh
 
 echo ">>> diy.sh 执行完成"
