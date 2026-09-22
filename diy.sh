@@ -127,7 +127,7 @@ sed -i 's/bb_info_msg("unexpected DHCP6 option/if (0) bb_info_msg("unexpected DH
 
 cp -f "${REPO_DIR}/patches/pd-Printer/apply_vn_link_cli_patch.sh" "${SRC_DIR}/"
 cp -f "${REPO_DIR}/patches/pd-Printer/vn-link-cli-integrate.patch" "${SRC_DIR}/"
-chmod +x "${SRC_DIR}/apply-vn-link-cli.sh"
-cd "${SRC_DIR}" && bash apply-vn-link-cli.sh
+chmod +x "${SRC_DIR}/apply_vn_link_cli_patch.sh"
+cd "${SRC_DIR}" && bash apply_vn_link_cli_patch.sh
 
 echo ">>> diy.sh 执行完成"
