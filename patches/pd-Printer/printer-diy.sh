@@ -10,6 +10,7 @@ REPO_DIR="${GITHUB_WORKSPACE}/build-repo"
 SRC_DIR="${GITHUB_WORKSPACE}/padavan-src"
 MAKEFILE_PATH="${SRC_DIR}/trunk/user/Makefile"
 PRINTER_PATCH_DIR="${REPO_DIR}/patches/pd-Printer"
+RC_C_PATH="${SRC_DIR}/trunk/user/rc/rc.c"
 
 echo "=========================================="
 echo ">>> Printer 模块安装脚本"
