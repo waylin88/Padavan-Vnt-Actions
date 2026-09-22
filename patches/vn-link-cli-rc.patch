@@ -97,10 +97,18 @@ index 92f77b2b8..954e64827 100644
 +#endif /* _rc_h_ */
 \ No newline at end of file
 diff --git a/trunk/user/rc/services.c b/trunk/user/rc/services.c
-index b3314f8c9..7caea42f7 100644
+index b3314f8c9..6be648985 100644
 --- a/trunk/user/rc/services.c
 +++ b/trunk/user/rc/services.c
-@@ -364,6 +364,152 @@ void restart_vlmcsd(void){
+@@ -21,6 +21,7 @@
+ #include <signal.h>
+ #include <unistd.h>
+ #include <errno.h>
++#include <fcntl.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ 
+@@ -364,6 +365,152 @@ void restart_vlmcsd(void){
  }
  #endif
  
@@ -253,7 +261,7 @@ index b3314f8c9..7caea42f7 100644
  #if defined(APP_DNSFORWARDER)
  void stop_dnsforwarder(void){
  	eval("/usr/bin/dns-forwarder.sh","stop");
-@@ -686,4 +832,4 @@ stop_misc(void)
+@@ -686,4 +833,4 @@ stop_misc(void)
  	};
  
  	kill_services(svcs, 3, 1);
