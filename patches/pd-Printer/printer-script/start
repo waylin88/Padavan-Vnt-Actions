@@ -49,7 +49,7 @@ chmod 777 /var/judge.sh
 #虚拟USB配置
 
 cat  > /var/usb.ini <<-EOF
-ServerName=$HOSTNAME
+ServerName=Network Print Server
 AutoAttachToKernel=1
 License=$mac,$num,$lic
 ResetOnDisconnect=1
