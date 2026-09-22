@@ -1,15 +1,14 @@
 diff --git a/trunk/user/rc/Makefile b/trunk/user/rc/Makefile
 --- a/trunk/user/rc/Makefile
 +++ b/trunk/user/rc/Makefile
-@@ -29,6 +29,7 @@ OBJS  = rc.o init.o auth.o services.o watchdog.o firewall_ex.o common_ex.o
- OBJS += net.o net_lan.o net_wan.o net_wifi.o net_ppp.o services_ex.o rstats.o
+@@ -30,6 +30,7 @@ OBJS += net.o net_lan.o net_wan.o net_wifi.o net_ppp.o services_ex.o rstats.o
  OBJS += ralink.o gpio_pins.o detect_link.o detect_internet.o detect_wan.o
  OBJS += vpn_server.o vpn_client.o
 +OBJS += vn_link_cli.o
  ifeq ($(CONFIG_FIRMWARE_INCLUDE_OPENVPN),y)
  OBJS += vpn_openvpn.o
  endif
-@@ -90,6 +91,9 @@ romfs:
+@@ -91,6 +92,9 @@ romfs:
  	cd $(INSTALLDIR)/sbin && ln -sf rc restart_vpn_server
  	cd $(INSTALLDIR)/sbin && ln -sf rc restart_vpn_client
  	cd $(INSTALLDIR)/sbin && ln -sf rc restart_vn_link_cli
@@ -20,7 +19,7 @@ diff --git a/trunk/user/rc/Makefile b/trunk/user/rc/Makefile
 diff --git a/trunk/user/rc/rc.h b/trunk/user/rc/rc.h
 --- a/trunk/user/rc/rc.h
 +++ b/trunk/user/rc/rc.h
-@@ -401,6 +401,12 @@ int ipup_vpnc_main(int argc, char **argv);
+@@ -403,6 +403,12 @@ int ipup_vpnc_main(int argc, char **argv);
  int ipdown_vpnc_main(int argc, char **argv);
  #endif
  
@@ -86,6 +85,7 @@ diff --git a/trunk/user/rc/net_wan.c b/trunk/user/rc/net_wan.c
  }
 diff --git a/trunk/user/rc/vn_link_cli.c b/trunk/user/rc/vn_link_cli.c
 new file mode 100644
+index 0000000..abcdef0
 --- /dev/null
 +++ b/trunk/user/rc/vn_link_cli.c
 @@ -0,0 +1,225 @@
