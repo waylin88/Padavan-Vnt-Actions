@@ -126,52 +126,62 @@ sed -i 's/bb_info_msg("unexpected DHCP6 option/if (0) bb_info_msg("unexpected DH
     "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_common.c"
 
 
-# ===== rc.c 重排：纯 sed + shell =====
+python3 - "$RC_C_PATH" << 'PYEOF'
+import sys
 
-# 1. 精确定位调用区 3 个块的 #if 行（特征：下一行是带分号的 load_xxx();）
-#    rc.c 里 USE_XXX_SUPPORT 出现两次：函数声明区（load(void)）和调用区（load();）
-#    用 awk 的 getline 看下一行区分，只拿到调用区的行号
-get_if_line() {
-    local kw="$1" fn="$2"
-    awk -v k="$kw" -v f="$fn" '
-        $0 ~ k { getline; if ($0 ~ f) { print NR-1; exit } }
-    ' "$RC_C_PATH"
-}
+rc_path = sys.argv[1]
 
-MMC_IF=$(get_if_line 'USE_MMC_SUPPORT' 'load_mmc_modules();')
-USB_IF=$(get_if_line 'USE_USB_SUPPORT' 'load_usb_modules();')
-ATA_IF=$(get_if_line 'USE_ATA_SUPPORT' 'load_ata_modules();')
+with open(rc_path, 'r') as f:
+    lines = f.readlines()
 
-# 2. 按行号删除（从大到小，避免行号偏移）
-sed -i "${ATA_IF},$((ATA_IF+2))d" "$RC_C_PATH"
-sed -i "${USB_IF},$((USB_IF+2))d" "$RC_C_PATH"
-sed -i "${MMC_IF},$((MMC_IF+2))d" "$RC_C_PATH"
+# Step 1: 删除原位置的 MMC / USB / ATA 加载块（每个 3 行: #if / load / #endif）
+BLOCK_PATTERNS = [
+    ('#if defined (USE_MMC_SUPPORT)', 'load_mmc_modules'),
+    ('#if defined (USE_USB_SUPPORT)', 'load_usb_modules'),
+    ('#if defined (USE_ATA_SUPPORT)', 'load_ata_modules'),
+]
 
-# 3. 找 restart_crond(); 所在 if 块的闭合 }（2tab restart_crond → 下一行是 1tab }）
-CROND_LINE=$(grep -nP '^\t\trestart_crond\(\);$' "$RC_C_PATH" | head -1 | cut -d: -f1)
-CLOSE_LINE=$((CROND_LINE + 1))
+for if_line, load_fn in BLOCK_PATTERNS:
+    i = 0
+    while i < len(lines):
+        if if_line in lines[i]:
+            if i + 2 < len(lines) and load_fn in lines[i+1] and '#endif' in lines[i+2]:
+                del lines[i:i+3]
+                continue
+        i += 1
 
-# 4. 准备插入块
-TMPBLK="$(mktemp)"
-cat > "$TMPBLK" << 'EOF'
-#if defined (USE_MMC_SUPPORT)
-	load_mmc_modules();
-#endif
-#if defined (USE_USB_SUPPORT)
-	load_usb_modules();
-#endif
-#if defined (USE_ATA_SUPPORT)
-	load_ata_modules();
-#endif
-EOF
+# Step 2: 在 restart_crond(); 所在 if 块的闭合 } 之后插入 MMC → USB → ATA
+INSERT_BLOCKS = [
+    ['#if defined (USE_MMC_SUPPORT)\n', '\tload_mmc_modules();\n', '#endif\n'],
+    ['#if defined (USE_USB_SUPPORT)\n', '\tload_usb_modules();\n', '#endif\n'],
+    ['#if defined (USE_ATA_SUPPORT)\n', '\tload_ata_modules();\n', '#endif\n'],
+]
 
-# 5. 在闭合 } 之后读入插入块 —— 纯行号寻址，零 {} 块
-sed -i "${CLOSE_LINE}r ${TMPBLK}" "$RC_C_PATH"
-rm -f "${TMPBLK}"
+crond_idx = None
+for i, line in enumerate(lines):
+    if 'restart_crond();' in line:
+        crond_idx = i
+        break
 
-# 验证
-echo ">>> 验证加载块位置："
-grep -n 'load_usb_modules\|load_mmc_modules\|load_ata_modules\|restart_crond' "$RC_C_PATH"
+if crond_idx is None:
+    print('ERROR: restart_crond(); not found in rc.c!')
+    sys.exit(1)
+
+insert_after = crond_idx + 1
+offset = insert_after + 1
+for block in INSERT_BLOCKS:
+    for j, bline in enumerate(block):
+        lines.insert(offset + j, bline)
+    offset += len(block)
+
+with open(rc_path, 'w') as f:
+    f.writelines(lines)
+
+# 打印验证
+for i, line in enumerate(lines, 1):
+    if any(x in line for x in ['restart_crond', 'load_mmc_modules', 'load_usb_modules', 'load_ata_modules']):
+        print(f'  {i}: {line.rstrip()}')
+PYEOF
 
 
 echo ">>> diy.sh 执行完成"
