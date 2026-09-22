@@ -126,34 +126,23 @@ sed -i 's/bb_info_msg("unexpected DHCP6 option/if (0) bb_info_msg("unexpected DH
     "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_common.c"
 
 
-MMC_BLOCK="#if defined (USE_MMC_SUPPORT)
-	load_mmc_modules();
-#endif"
-USB_BLOCK="#if defined (USE_USB_SUPPORT)
-	load_usb_modules();
-#endif"
-ATA_BLOCK="#if defined (USE_ATA_SUPPORT)
-	load_ata_modules();
-#endif"
-
 MMC_FILE="$(mktemp)"
 USB_FILE="$(mktemp)"
 ATA_FILE="$(mktemp)"
-printf '%s\n' "$MMC_BLOCK" > "$MMC_FILE"
-printf '%s\n' "$USB_BLOCK" > "$USB_FILE"
-printf '%s\n' "$ATA_BLOCK" > "$ATA_FILE"
+
+printf '#if defined (USE_MMC_SUPPORT)\n\tload_mmc_modules();\n#endif\n' > "$MMC_FILE"
+printf '#if defined (USE_USB_SUPPORT)\n\tload_usb_modules();\n#endif\n' > "$USB_FILE"
+printf '#if defined (USE_ATA_SUPPORT)\n\tload_ata_modules();\n#endif\n' > "$ATA_FILE"
 
 # 1. 删除原位置的 MMC / USB / ATA 加载块
 sed -i '/#if defined (USE_MMC_SUPPORT)/{N;N;d}' "$RC_C_PATH"
 sed -i '/#if defined (USE_USB_SUPPORT)/{N;N;d}' "$RC_C_PATH"
 sed -i '/#if defined (USE_ATA_SUPPORT)/{N;N;d}' "$RC_C_PATH"
 
-# 2. 在 restart_crond(); 之后依次插入 MMC → USB → ATA 加载块
+# 2. 依次插入: restart_crond() → MMC 块 → USB 块 → ATA 块
 sed -i "/restart_crond();/r $MMC_FILE" "$RC_C_PATH"
-sed -i "/restart_crond();/,/#endif/{/#endif/r $USB_FILE
-}" "$RC_C_PATH"
-sed -i "/restart_crond();/,/#endif/,/#endif/{/#endif/r $ATA_FILE
-}" "$RC_C_PATH"
+sed -i '/#if defined (USE_MMC_SUPPORT)/,/#endif/{/#endif/r '"$USB_FILE"'}' "$RC_C_PATH"
+sed -i '/#if defined (USE_USB_SUPPORT)/,/#endif/{/#endif/r '"$ATA_FILE"'}' "$RC_C_PATH"
 
 rm -f "$MMC_FILE" "$USB_FILE" "$ATA_FILE"
 
