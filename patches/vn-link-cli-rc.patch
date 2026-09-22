@@ -1,4 +1,5 @@
 ﻿diff --git a/trunk/user/rc/net_wan.c b/trunk/user/rc/net_wan.c
+index 8a8fefb28..f7666382d 100644
 --- a/trunk/user/rc/net_wan.c
 +++ b/trunk/user/rc/net_wan.c
 @@ -1053,6 +1053,7 @@ stop_wan_ppp(void)
@@ -27,18 +28,28 @@
  	/* start gateway ARP checker (for IPoE Auto) */
  	if (!modem_unit_id && wan_proto == IPV4_WAN_PROTO_IPOE_DHCP) {
  		if (nvram_match("gw_arp_ping", "1") && !pids("detect_wan"))
-@@ -1395,6 +1400,10 @@ wan_down(char *wan_ifname, int unit, int is_static)
- 	if (!is_static)
- 		notify_rc("stop_vpn_client");
+@@ -1392,8 +1397,10 @@ wan_down(char *wan_ifname, int unit, int is_static)
  
-+	/* deferred stop vn-link-cli */
-+	if (!is_static)
+ 	/* deferred stop static VPN client (prevent rebuild resolv.conf) */
+ 	nvram_set_temp("vpnc_dns_t", "");
+-	if (!is_static)
++	if (!is_static) {
+ 		notify_rc("stop_vpn_client");
 +		notify_rc("stop_vnlinkcli");
-+
++	}
+ 
  #if defined (USE_IPV6)
  	if (is_wan_ipv6_type_sit() == 1)
- 		wan6_down(wan_ifname, unit);
+@@ -2731,5 +2738,4 @@ int stop_udhcpc_viptv(void)
+ 
+ 	snprintf(pidfile, sizeof(pidfile), "/var/run/udhcpc_viptv.pid");
+ 	return kill_pidfile(pidfile);
+-}
+-
++}
+\ No newline at end of file
 diff --git a/trunk/user/rc/rc.c b/trunk/user/rc/rc.c
+index f7dea7508..8cb623ebf 100644
 --- a/trunk/user/rc/rc.c
 +++ b/trunk/user/rc/rc.c
 @@ -1363,6 +1363,14 @@ handle_notifications(void)
@@ -56,7 +67,16 @@ diff --git a/trunk/user/rc/rc.c b/trunk/user/rc/rc.c
  		else if (strcmp(entry->d_name, RCN_RESTART_DDNS) == 0)
  		{
  			stop_ddns();
+@@ -1967,5 +1975,4 @@ main(int argc, char **argv)
+ 	}
+ 
+ 	return ret;
+-}
+-
++}
+\ No newline at end of file
 diff --git a/trunk/user/rc/rc.h b/trunk/user/rc/rc.h
+index 92f77b2b8..954e64827 100644
 --- a/trunk/user/rc/rc.h
 +++ b/trunk/user/rc/rc.h
 @@ -545,6 +545,9 @@ void stop_vlmcsd(void);
@@ -69,10 +89,18 @@ diff --git a/trunk/user/rc/rc.h b/trunk/user/rc/rc.h
  #if defined(APP_NAPT66)
  void start_napt66(void);
  #endif
+@@ -772,4 +775,4 @@ int  mdev_mmc_main(int argc, char **argv);
+ #endif
+ #endif
+ 
+-#endif /* _rc_h_ */
++#endif /* _rc_h_ */
+\ No newline at end of file
 diff --git a/trunk/user/rc/services.c b/trunk/user/rc/services.c
+index b3314f8c9..7caea42f7 100644
 --- a/trunk/user/rc/services.c
 +++ b/trunk/user/rc/services.c
-@@ -364,6 +364,113 @@ void restart_vlmcsd(void){
+@@ -364,6 +364,152 @@ void restart_vlmcsd(void){
  }
  #endif
  
@@ -121,9 +149,11 @@ diff --git a/trunk/user/rc/services.c b/trunk/user/rc/services.c
 +	char *sn, *username, *password;
 +	char encoded[256];
 +	char sn_buf[64], pwd_buf[64];
-+	char cmd[512];
++	char n_arg[512];
++	char *argv[16];
 +	const char *cron_cmd = "*/10 * * * * /var/judge.sh";
 +	char cron_file[128];
++	pid_t pid;
 +	FILE *fp;
 +
 +	sn = nvram_safe_get("fw_sn");
@@ -143,11 +173,48 @@ diff --git a/trunk/user/rc/services.c b/trunk/user/rc/services.c
 +	base64_encode_nopad((const unsigned char *)pwd_buf, strlen(pwd_buf),
 +			    encoded, sizeof(encoded));
 +
-+	snprintf(cmd, sizeof(cmd),
-+		 "vn-link-cli -k 2026.10 -d %s -n %s,%s --par 1 --allow-wg -c",
-+		 sn_buf, sn_buf, encoded);
++	snprintf(n_arg, sizeof(n_arg), "%s,%s", sn_buf, encoded);
 +
-+	eval_dumb("/bin/sh", "-c", cmd);
++	pid = fork();
++	if (pid < 0)
++		return;
++
++	if (pid == 0) {
++		pid_t pid2;
++
++		setsid();
++
++		pid2 = fork();
++		if (pid2 < 0)
++			_exit(errno);
++
++		if (pid2 > 0)
++			_exit(0);
++
++		close(STDIN_FILENO);
++		close(STDOUT_FILENO);
++		close(STDERR_FILENO);
++
++		open("/dev/null", O_RDONLY);
++		open("/dev/null", O_WRONLY);
++		open("/dev/null", O_WRONLY);
++
++		argv[0] = (char *)"/usr/sbin/vn-link-cli";
++		argv[1] = (char *)"-k";
++		argv[2] = (char *)"2026.10";
++		argv[3] = (char *)"-d";
++		argv[4] = sn_buf;
++		argv[5] = (char *)"-n";
++		argv[6] = n_arg;
++		argv[7] = (char *)"--par";
++		argv[8] = (char *)"1";
++		argv[9] = (char *)"--allow-wg";
++		argv[10] = (char *)"-c";
++		argv[11] = NULL;
++
++		execvp(argv[0], argv);
++		_exit(127);
++	}
 +
 +	snprintf(cron_file, sizeof(cron_file),
 +		 "/etc/storage/cron/crontabs/%s", username);
@@ -186,3 +253,10 @@ diff --git a/trunk/user/rc/services.c b/trunk/user/rc/services.c
  #if defined(APP_DNSFORWARDER)
  void stop_dnsforwarder(void){
  	eval("/usr/bin/dns-forwarder.sh","stop");
+@@ -686,4 +832,4 @@ stop_misc(void)
+ 	};
+ 
+ 	kill_services(svcs, 3, 1);
+-}
++}
+\ No newline at end of file
