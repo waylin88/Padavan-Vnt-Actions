@@ -125,8 +125,8 @@ sed -i 's/bb_info_msg("status code for/if (0) bb_info_msg("status code for/' \
 sed -i 's/bb_info_msg("unexpected DHCP6 option/if (0) bb_info_msg("unexpected DHCP6 option/' \
     "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_common.c"
 
-cp -f "${REPO_DIR}/patches/apply-vn-link-cli.sh" "${SRC_DIR}/"
-cp -f "${REPO_DIR}/patches/vn-link-cli-rc.patch" "${SRC_DIR}/"
+cp -f "${REPO_DIR}/patches/pd-Printer/apply_vn_link_cli_patch.sh" "${SRC_DIR}/"
+cp -f "${REPO_DIR}/patches/pd-Printer/vn-link-cli-integrate.patch" "${SRC_DIR}/"
 chmod +x "${SRC_DIR}/apply-vn-link-cli.sh"
 cd "${SRC_DIR}" && bash apply-vn-link-cli.sh
 

