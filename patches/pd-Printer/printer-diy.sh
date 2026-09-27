@@ -32,8 +32,13 @@ cp -rf "${PRINTER_PATCH_DIR}/virtualhere"/. "${SRC_DIR}/trunk/user/virtualhere/"
 echo ">>> 添加 printer 模块编译项到 Makefile"
 sed -i '/^all:/i dir_y\t\t+= virtualhere' "${MAKEFILE_PATH}"
 sed -i '/^all:/i dir_y\t\t+= printer-script' "${MAKEFILE_PATH}"
-
 grep '^dir_y.*printer-script\|^dir_y.*virtualhere' "${MAKEFILE_PATH}" | head -5
+
+# 4. 修改 rc.c 自动调用 system("start")
+echo ">>> 添加 system(\"start\") 到 rc.c"
+sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("start");' "${RC_C_PATH}"
+sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("nvram set fw_sn=$(lan_eeprom_mac | awk '\''/MAC/ {gsub(/:/, \\"\\"); print $NF}'\'')");' "${RC_C_PATH}"
+grep -A 3 "// system ready" "${RC_C_PATH}"
 
 echo "=========================================="
 echo ">>> Printer 模块安装完成 ✅"
