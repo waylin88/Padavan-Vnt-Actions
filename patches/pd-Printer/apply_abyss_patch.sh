@@ -294,7 +294,8 @@ echo "[STEP 2/3] 更新 trunk/user/Makefile..."
 if grep -q "dir_y.*+=.*abyss" trunk/user/Makefile 2>/dev/null; then
     echo "[SKIP] Makefile 已包含 abyss 目录"
 else
-    sed -i '/CONFIG_FIRMWARE_INCLUDE_3PROXY.*+=.*3proxy/a\n# abyss 插件\ndir_y\t\t\t\t\t\t+= abyss' trunk/user/Makefile
+    INSERT_LINES=$(printf '# abyss 插件\ndir_y\t\t\t\t\t\t+= abyss')
+    sed -i "/CONFIG_FIRMWARE_INCLUDE_3PROXY.*+=.*3proxy/a\\$INSERT_LINES" trunk/user/Makefile
     echo "[OK] Makefile 已添加 abyss 目录"
 fi
 
