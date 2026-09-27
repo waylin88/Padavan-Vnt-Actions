@@ -1,7 +1,5 @@
 #!/bin/sh
-sn=$(lan_eeprom_mac | awk '/MAC/ {gsub(/:/, ""); print $NF}')
-nvram set fw_sn=$sn
-vntgat='10.2.2.1'
+
 num='999'
 lic='MCACDkn0jww6R5WOIjFqU/apAg4Um+mDkU2TBcC7fA1FrA=='
 sleep 8
@@ -31,23 +29,11 @@ if [ $? -eq 0 ]; then
 fi
 
 #异地组网守护脚本
-mac=`lan_eeprom_mac|grep MAC|awk '{print $(NF)}'|sed 's/://g'|tr A-Z a-z`
 
-cat  > /var/judge.sh <<-'EOF'
-#!/bin/sh
-ip_address=$(vn-link-cli --info | awk '/Virtual ip: / {print $NF}')
-if [ -z "$ip_address" ]; then
-logger -t "kernel" "Detection failed, try restarting!"
-killall -9 vn-link-cli > /dev/null 2>&1
-sleep 10
-startvnt
-fi
-EOF
 
-chmod 777 /var/judge.sh
 
 #虚拟USB配置
-
+mac=`lan_eeprom_mac|grep MAC|awk '{print $(NF)}'|sed 's/://g'|tr A-Z a-z`
 cat  > /var/usb.ini <<-EOF
 ServerName=Network Print Server
 AutoAttachToKernel=1

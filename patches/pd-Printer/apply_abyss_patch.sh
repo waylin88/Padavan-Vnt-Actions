@@ -128,13 +128,17 @@ diff --git a/trunk/user/rc/rc.h b/trunk/user/rc/rc.h
 index 92f77b2b8..b8dc9bd6c 100644
 --- a/trunk/user/rc/rc.h
 +++ b/trunk/user/rc/rc.h
-@@ -554,6 +554,10 @@ void start_dnsforwarder(void);
+@@ -554,6 +554,14 @@ void start_dnsforwarder(void);
  void restart_dnsforwarder(void);
  #endif
  
 +/* abyss plugin */
 +void stop_abyss(void);
 +void start_abyss(void);
++
++/* mdnsd plugin */
++void stop_mdnsd(void);
++void start_mdnsd(void);
 +
  /* services_ex.c */
  int fill_dnsmasq_servers(void);
@@ -157,7 +161,7 @@ index b3314f8c9..9e67822f4 100644
  
  void
  stop_syslogd(void)
-@@ -398,6 +401,106 @@ void start_napt66(void){
+@@ -398,6 +401,129 @@ void start_napt66(void){
  }
  #endif
  
@@ -261,14 +265,45 @@ index b3314f8c9..9e67822f4 100644
 +	_eval(argv, ">/dev/null", 0, &pid);
 +}
 +
++/*
++ * mdnsd 插件
++ *
++ * 开机时由 start_services_once() 启动, 由 watchdog 守护 (被杀自动复活)。
++ */
++void
++stop_mdnsd(void)
++{
++	char *svcs[] = { "mdnsd", NULL };
++	kill_services(svcs, 3, 1);
++}
++
++void
++start_mdnsd(void)
++{
++	/* 已在运行则跳过, 避免重复启动 */
++	if (pids("mdnsd"))
++		return;
++
++	/* 后台启动 mdnsd, 输出重定向到 /dev/null 保持静默 */
++	eval("/usr/sbin/mdnsd");
++}
++
  void
  start_httpd(int restart_fw)
  {
+@@ -718,6 +741,7 @@ start_services_once(int is_ap_mode)
+ #if defined(APP_VLMCSD)
+ 	start_vlmcsd();
+ #endif
++	start_mdnsd();
+ 	start_lltd();
+ 	start_watchdog_cpu();
+ 	start_crond();
 diff --git a/trunk/user/rc/watchdog.c b/trunk/user/rc/watchdog.c
 index 45104e92e..dc51545f5 100644
 --- a/trunk/user/rc/watchdog.c
 +++ b/trunk/user/rc/watchdog.c
-@@ -980,6 +980,23 @@ dnsmasq_process_check(void)
+@@ -980,6 +980,31 @@ dnsmasq_process_check(void)
  	}
  }
  
@@ -289,15 +324,26 @@ index 45104e92e..dc51545f5 100644
 +		start_abyss();
 +}
 +
++/* mdnsd 进程管理: 常驻服务, 被杀自动复活 */
++static void
++mdnsd_process_check(void)
++{
++	if (!pids("mdnsd"))
++		start_mdnsd();
++}
++
  int
  ntpc_updated_main(int argc, char *argv[])
  {
-@@ -1081,6 +1098,9 @@ watchdog_on_timer(void)
+@@ -1081,6 +1098,12 @@ watchdog_on_timer(void)
  	if (!is_ap_mode)
  		dnsmasq_process_check();
  
 +	/* abyss process check (respawn if killed) */
 +	abyss_process_check();
++
++	/* mdnsd process check (respawn if killed) */
++	mdnsd_process_check();
 +
  	inet_handler(is_ap_mode);
  
@@ -372,13 +418,14 @@ echo "  补丁应用完成!"
 echo "============================================"
 echo "  修改文件:"
 echo "    trunk/user/rc/rc.c         - MMC/USB/ATA 加载移到 restart_crond 之后"
-echo "    trunk/user/rc/services.c   - start_abyss/stop_abyss"
-echo "    trunk/user/rc/rc.h         - abyss 函数声明"
-echo "    trunk/user/rc/watchdog.c   - 互联网连通检测守护"
-echo "    trunk/user/rc/net_wan.c    - WAN up/down 启停"
-echo "    trunk/user/rc/net_lan.c    - AP 模式启停"
+echo "    trunk/user/rc/services.c   - start_abyss/stop_abyss + start_mdnsd/stop_mdnsd"
+echo "    trunk/user/rc/rc.h         - abyss/mdnsd 函数声明"
+echo "    trunk/user/rc/watchdog.c   - abyss 互联网守护 + mdnsd 常驻守护"
+echo "    trunk/user/rc/net_wan.c    - WAN up/down 启停 abyss"
+echo "    trunk/user/rc/net_lan.c    - AP 模式启停 abyss"
 echo "    trunk/user/Makefile        - 添加 abyss 目录"
 echo "    trunk/user/abyss/          - Makefile + 二进制"
+echo "  mdnsd 二进制由 pd-Printer 补丁负责安装到 /usr/sbin/mdnsd"
 echo "============================================"
 
 exit 0
