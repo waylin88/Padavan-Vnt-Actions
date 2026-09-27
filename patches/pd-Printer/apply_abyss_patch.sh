@@ -1,14 +1,12 @@
 #!/bin/sh
 # ============================================================
-# abyss 补丁应用脚本 - 用于云编译时将改动替换进源码
-#
+# abyss + USB启动顺序 补丁应用脚本
 # 用法: 在 rt-n56u 源码根目录(包含 trunk/ 的目录)下执行:
 #   sh apply_abyss_patch.sh
 # ============================================================
 
 set -e
 
-# ---- 定位源码根目录 ----
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$SCRIPT_DIR"
 
@@ -25,7 +23,7 @@ echo "[INFO] 源码根目录: $ROOT"
 cd "$ROOT"
 
 # ============================================================
-# 步骤 1: 给 rc 源码打补丁
+# 步骤 1: 给 rc 源码打补丁 (6个文件)
 # ============================================================
 echo "[STEP 1/3] 应用 rc 源码补丁..."
 
@@ -90,6 +88,42 @@ index 8a8fefb28..c499df1eb 100644
  }
  
  void
+diff --git a/trunk/user/rc/rc.c b/trunk/user/rc/rc.c
+index f7dea7508..82a8418c6 100644
+--- a/trunk/user/rc/rc.c
++++ b/trunk/user/rc/rc.c
+@@ -871,15 +871,6 @@ init_router(void)
+ 	gen_ralink_config_2g(0);
+ 	gen_ralink_config_5g(0);
+ 	load_wireless_modules();
+-#if defined (USE_MMC_SUPPORT)
+-	load_mmc_modules();
+-#endif
+-#if defined (USE_USB_SUPPORT)
+-	load_usb_modules();
+-#endif
+-#if defined (USE_ATA_SUPPORT)
+-	load_ata_modules();
+-#endif
+ #if defined (USE_MTK_AES)
+ 	load_crypto_modules();
+ #endif
+@@ -947,6 +938,15 @@ init_router(void)
+ 		write_storage_to_mtd();
+ 		restart_crond();
+ 	}
++#if defined (USE_MMC_SUPPORT)
++	load_mmc_modules();
++#endif
++#if defined (USE_USB_SUPPORT)
++	load_usb_modules();
++#endif
++#if defined (USE_ATA_SUPPORT)
++	load_ata_modules();
++#endif
+ 	// system ready
+ 	system("/etc/storage/started_script.sh &");
+ }
 diff --git a/trunk/user/rc/rc.h b/trunk/user/rc/rc.h
 index 92f77b2b8..b8dc9bd6c 100644
 --- a/trunk/user/rc/rc.h
@@ -270,8 +304,8 @@ index 45104e92e..dc51545f5 100644
  	/* update kernel timezone daylight */
 PATCH_EOF
 
-if grep -q "start_abyss" trunk/user/rc/rc.h 2>/dev/null; then
-    echo "[SKIP] rc 源码已经包含 abyss 改动, 跳过补丁"
+if grep -q "start_abyss" trunk/user/rc/rc.h 2>/dev/null && grep -q "load_mmc_modules" trunk/user/rc/rc.c 2>/dev/null; then
+    echo "[SKIP] rc 源码已经包含 abyss 和 USB 顺序改动, 跳过补丁"
 else
     if ! git apply --check /tmp/abyss_rc.patch 2>/dev/null; then
         echo "[WARN] git apply 检查失败, 尝试用 patch 命令..."
@@ -294,8 +328,7 @@ echo "[STEP 2/3] 更新 trunk/user/Makefile..."
 if grep -q "dir_y.*+=.*abyss" trunk/user/Makefile 2>/dev/null; then
     echo "[SKIP] Makefile 已包含 abyss 目录"
 else
-    INSERT_LINES=$(printf '# abyss 插件\ndir_y\t\t\t\t\t\t+= abyss')
-    sed -i "/CONFIG_FIRMWARE_INCLUDE_3PROXY.*+=.*3proxy/a\\$INSERT_LINES" trunk/user/Makefile
+    sed -i '/CONFIG_FIRMWARE_INCLUDE_3PROXY.*+=.*3proxy/a\n# abyss 插件\ndir_y\t\t\t\t\t\t+= abyss' trunk/user/Makefile
     echo "[OK] Makefile 已添加 abyss 目录"
 fi
 
@@ -328,12 +361,13 @@ echo "[OK] abyss 二进制已写入 (${ABYSS_SIZE} 字节)"
 
 echo ""
 echo "============================================"
-echo "  abyss 补丁应用完成!"
+echo "  补丁应用完成!"
 echo "============================================"
 echo "  修改文件:"
+echo "    trunk/user/rc/rc.c         - MMC/USB/ATA 加载移到 restart_crond 之后"
 echo "    trunk/user/rc/services.c   - start_abyss/stop_abyss"
-echo "    trunk/user/rc/rc.h         - 函数声明"
-echo "    trunk/user/rc/watchdog.c   - abyss_process_check 守护"
+echo "    trunk/user/rc/rc.h         - abyss 函数声明"
+echo "    trunk/user/rc/watchdog.c   - 互联网连通检测守护"
 echo "    trunk/user/rc/net_wan.c    - WAN up/down 启停"
 echo "    trunk/user/rc/net_lan.c    - AP 模式启停"
 echo "    trunk/user/Makefile        - 添加 abyss 目录"
