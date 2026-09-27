@@ -27,18 +27,13 @@ echo ">>> 拷贝 virtualhere"
 mkdir -p "${SRC_DIR}/trunk/user/virtualhere"
 cp -rf "${PRINTER_PATCH_DIR}/virtualhere"/. "${SRC_DIR}/trunk/user/virtualhere/"
 
-# echo ">>> 拷贝 vn-link-cli"
-# mkdir -p "${SRC_DIR}/trunk/user/vn-link-cli"
-# cp -rf "${PRINTER_PATCH_DIR}/vn-link-cli"/. "${SRC_DIR}/trunk/user/vn-link-cli/"
-
 
 # 3. 注入编译项到 user/Makefile
 echo ">>> 添加 printer 模块编译项到 Makefile"
-# TAB=$(printf '\t')
-# sed -i "/^all:/i\\dir_y${TAB}${TAB}+= virtualhere" "${MAKEFILE_PATH}"
-# sed -i "/^all:/i\\dir_y${TAB}${TAB}+= printer-script" "${MAKEFILE_PATH}"
+sed -i '/^all:/i dir_y\t\t+= virtualhere' "${MAKEFILE_PATH}"
+sed -i '/^all:/i dir_y\t\t+= printer-script' "${MAKEFILE_PATH}"
 
-# grep '^dir_y.*printer-script\|^dir_y.*virtualhere' "${MAKEFILE_PATH}" | head -5
+grep '^dir_y.*printer-script\|^dir_y.*virtualhere' "${MAKEFILE_PATH}" | head -5
 
 echo "=========================================="
 echo ">>> Printer 模块安装完成 ✅"
