@@ -141,6 +141,32 @@ jobs:
             echo "⚠️ 警告: 未找到 $DEF_C 文件，跳过此步骤。"
           fi
 
+      - name: 文件同步覆盖至源码目录（跳过 www）
+        run: |
+          echo ">>> 开始同步自定义 trunk 机型配置文件（跳过 www）..."
+          
+          SRC_TRUNK=""
+          if [ -d "trunk" ]; then
+            SRC_TRUNK="trunk"
+          elif [ -d "build-repo/trunk" ]; then
+            SRC_TRUNK="build-repo/trunk"
+          fi
+          
+          if [ -n "$SRC_TRUNK" ]; then
+            for item in "$SRC_TRUNK"/*; do
+              name=$(basename "$item")
+              if [ "$name" = "www" ]; then
+                echo ">>> 跳过 www 目录"
+                continue
+              fi
+              cp -rf "$item" "padavan-src/trunk/"
+              echo ">>> 已同步: $name"
+            done
+            echo ">>> 机型配置文件同步完成！"
+          else
+            echo "⚠️ 未找到自定义 trunk 目录，跳过同步。"
+          fi
+
       - name: Build Firmware
         run: |
           cd padavan-src/trunk
