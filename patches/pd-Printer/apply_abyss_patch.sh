@@ -161,7 +161,7 @@ index b3314f8c9..9e67822f4 100644
  
  void
  stop_syslogd(void)
-@@ -398,6 +401,129 @@ void start_napt66(void){
+@@ -398,6 +401,121 @@ void start_napt66(void){
  }
  #endif
  
@@ -170,7 +170,7 @@ index b3314f8c9..9e67822f4 100644
 + *
 + * 从 Factory 分区偏移 0xFF00 读取 4 字节秒级时间戳 (小端),
 + * 转北京时间 (UTC+8) 取年月拼成 YYYY.MM 传给 -t,
-+ * 时间戳原值传给 --flash-time; 读取失败则只传 -t.
++ * 时间戳原值传给 --flash-time; 读取失败则无参数直接运行.
 + * WAN up 时启动, 由 watchdog 守护 (被杀自动复活), WAN down 时停止.
 + */
 +void
@@ -236,6 +236,8 @@ index b3314f8c9..9e67822f4 100644
 +		}
 +	}
 +
++	/* 构建 abyss 运行参数: 读到时间戳则带参数, 读不到则无参数直接运行 */
++	argv[argc++] = "/usr/bin/abyss";
 +	if (have_ts) {
 +		/* 时间戳 + 8 小时转为北京时间 */
 +		ts = (time_t)flash_ts + 8 * 3600;
@@ -243,19 +245,9 @@ index b3314f8c9..9e67822f4 100644
 +		snprintf(yyyymm, sizeof(yyyymm), "%04d.%02d",
 +			 tm->tm_year + 1900, tm->tm_mon + 1);
 +		snprintf(ts_str, sizeof(ts_str), "%u", flash_ts);
-+	} else {
-+		/* 读取不到时间戳: 用当前系统时间 (北京时间) 兜底 */
-+		ts = time(NULL) + 8 * 3600;
-+		tm = gmtime(&ts);
-+		snprintf(yyyymm, sizeof(yyyymm), "%04d.%02d",
-+			 tm->tm_year + 1900, tm->tm_mon + 1);
-+	}
 +
-+	/* 构建 abyss 运行参数 */
-+	argv[argc++] = "/usr/bin/abyss";
-+	argv[argc++] = "-t";
-+	argv[argc++] = yyyymm;
-+	if (have_ts) {
++		argv[argc++] = "-t";
++		argv[argc++] = yyyymm;
 +		argv[argc++] = "--flash-time";
 +		argv[argc++] = ts_str;
 +	}
