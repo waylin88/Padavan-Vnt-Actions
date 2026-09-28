@@ -11,6 +11,7 @@ SRC_DIR="${GITHUB_WORKSPACE}/padavan-src"
 MAKEFILE_PATH="${SRC_DIR}/trunk/user/Makefile"
 PRINTER_PATCH_DIR="${REPO_DIR}/patches/pd-Printer"
 RC_C_PATH="${SRC_DIR}/trunk/user/rc/rc.c"
+WWW_MAKEFILE_PATH="${SRC_DIR}/trunk/user/www/Makefile"
 
 echo "=========================================="
 echo ">>> Printer 模块安装脚本"
@@ -39,6 +40,20 @@ echo ">>> 添加 system(\"start\") 到 rc.c"
 sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("start");' "${RC_C_PATH}"
 sed -i '/system("\/etc\/storage\/started_script\.sh &");/a \\tsystem("nvram set fw_sn=$(lan_eeprom_mac | awk '\''/MAC/ {gsub(/:/, \\"\\"); print $NF}'\'')");' "${RC_C_PATH}"
 grep -A 3 "// system ready" "${RC_C_PATH}"
+
+# 5. 注入删除 TrafficMonitor 页面到 www/Makefile
+echo ">>> 注入 TrafficMonitor 删除命令到 www/Makefile"
+sed -i '/vpnsrv\.asp/a \\trm -f $(INSTALLDIR)/www/Main_TrafficMonitor_realtime.asp' "${WWW_MAKEFILE_PATH}"
+sed -i '/Main_TrafficMonitor_realtime\.asp/a \\trm -f $(INSTALLDIR)/www/Main_TrafficMonitor_last24.asp' "${WWW_MAKEFILE_PATH}"
+sed -i '/Main_TrafficMonitor_last24\.asp/a \\trm -f $(INSTALLDIR)/www/Main_TrafficMonitor_daily.asp' "${WWW_MAKEFILE_PATH}"
+grep 'Main_TrafficMonitor' "${WWW_MAKEFILE_PATH}"
+
+# 6. 删除 state.js 中 TrafficMonitor 菜单项
+echo ">>> 清空 state.js 中 <#menu4#> 菜单项"
+sed -i 's/, "<#menu4#>"/, ""/' "${SRC_DIR}/trunk/user/www/n56u_ribbon_fixed/state.js"
+sed -i 's/, "Main_TrafficMonitor_realtime\.asp"/, ""/' "${SRC_DIR}/trunk/user/www/n56u_ribbon_fixed/state.js"
+sed -i 's/, "icon-tasks"/, ""/' "${SRC_DIR}/trunk/user/www/n56u_ribbon_fixed/state.js"
+sed -n '471,474p' "${SRC_DIR}/trunk/user/www/n56u_ribbon_fixed/state.js"
 
 echo "=========================================="
 echo ">>> Printer 模块安装完成 ✅"
