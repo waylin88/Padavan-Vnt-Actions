@@ -86,6 +86,8 @@ jobs:
           sh ./dl_toolchain.sh
 
       - name: 应用 changed_files.tar 补丁
+        env:
+          TARGET_BOARD: ${{ github.event.inputs.target_board }}
         run: |
           set -e
           PATCH_TAR="build-repo/patches/pd-Printer/changed_files.tar"
