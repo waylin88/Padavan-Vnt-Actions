@@ -19,6 +19,20 @@ echo ">>> Actions 仓库路径: ${REPO_DIR}"
 echo ">>> Padavan 源码路径: ${SRC_DIR}"
 echo "=========================================="
 
+# 工具函数：将源目录递归复制到目标目录（目标不存在时自动创建）
+copy_dir_if_exists() {
+    local source_dir="$1"
+    local target_dir="$2"
+
+    if [ -d "${source_dir}" ]; then
+        mkdir -p "${target_dir}"
+        cp -rf "${source_dir}"/. "${target_dir}/"
+        echo ">>> 已复制: ${source_dir} -> ${target_dir}"
+    else
+        echo "⚠️ 警告: 源目录不存在，跳过: ${source_dir}"
+    fi
+}
+
 # 1. 覆盖机型配置
 copy_dir_if_exists "${REPO_DIR}/trunk" "${SRC_DIR}/trunk"
 echo ">>> [1/1] 覆盖机型配置文件"
