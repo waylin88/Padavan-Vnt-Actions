@@ -40,7 +40,6 @@ copy_dir_if_exists() {
 echo ">>> [1/1] 覆盖机型配置文件"
 copy_dir_if_exists "${REPO_DIR}/trunk" "${SRC_DIR}/trunk"
 
-
 # 3. 按机型执行专属补丁
 echo ">>> 执行机型补丁 (${TARGET_BOARD})"
 
@@ -50,14 +49,14 @@ if [ "${TARGET_BOARD}" = "ZY-L1-7628N" ]; then
     grep -n "dl_status_usb =" "$TARGET_DETECT"
 fi
 
-if [ "${TARGET_BOARD}" = "8820v2" ]; then
+if [ "${TARGET_BOARD}" = "E8820V2" ]; then
     echo "  - 8820v2 WiFi 不启动补丁 (GPIO_PCIE_PORT1 = 26)"
     PCI_C_PATH="${SRC_DIR}/trunk/linux-3.4.x/arch/mips/rt2880/pci.c"
     sed -i -E '/UARTL3_SHARE_PIN_SW\s+PCIE_SHARE_PIN_SW/,/#define\s+GPIO_PCIE_PORT2/{s/#define\s+GPIO_PCIE_PORT1\s+.*/#define GPIO_PCIE_PORT1\t\t26/}' "${PCI_C_PATH}"
     grep GPIO_PCIE_PORT1 "${PCI_C_PATH}"
 fi
 
-if [ "${TARGET_BOARD}" = "8820s" ]; then
+if [ "${TARGET_BOARD}" = "ZTE_E8820S" ]; then
     echo "  - 8820s WiFi 不启动补丁 (GPIO_PCIE_PORT1 = 4)"
     PCI_C_PATH="${SRC_DIR}/trunk/linux-3.4.x/arch/mips/rt2880/pci.c"
     sed -i -E '/UARTL3_SHARE_PIN_SW\s+PCIE_SHARE_PIN_SW/,/#define\s+GPIO_PCIE_PORT2/{s/#define\s+GPIO_PCIE_PORT1\s+.*/#define GPIO_PCIE_PORT1\t\t4/}' "${PCI_C_PATH}"
