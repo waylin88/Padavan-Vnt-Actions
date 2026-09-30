@@ -1,0 +1,215 @@
+name: "Padavan-IP-Printer"
+run-name: "编译机型 [${{ github.event.inputs.target_board }}] - IP: ${{ github.event.inputs.custom_ips }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_board:
+        type: choice
+        description: '选择机型'
+        required: true
+        default: 'E8820V2'
+        options:
+          - 'JSH-03'
+          - 'ZY-L1'
+          - 'ZY-L1-7620N'
+          - 'ZY-L1-7628N'
+          - 'E8820V2'
+          - 'ZTE_E8820S'
+
+      enable_custom_ip:
+        type: boolean
+        description: '修改 LAN 侧 IP 地址 (勾选生效)'
+        default: true
+
+      custom_ips:
+        type: string
+        description: '填入 IP 列表 (用逗号或空格隔开)'
+        required: false
+        default: '192.168.8.1'
+
+env:
+  REPO_URL: https://github.com/waylin88/rt-n56u.git
+  REPO_BRANCH: master
+  TZ: Asia/Shanghai
+
+jobs:
+  parse-inputs:
+    runs-on: ubuntu-22.04
+    outputs:
+      ip_matrix: ${{ steps.set-matrix.outputs.ip_matrix }}
+    steps:
+      - name: Parse IP Inputs
+        id: set-matrix
+        run: |
+          ENABLE_IP="${{ github.event.inputs.enable_custom_ip }}"
+          RAW_IPS="${{ github.event.inputs.custom_ips }}"
+
+          if [ "$ENABLE_IP" = "true" ] && [ -n "$(echo $RAW_IPS | tr -d ' ')" ]; then
+            JSON_ARRAY=$(echo "$RAW_IPS" | tr ',' ' ' | xargs -n1 | jq -R . | jq -s -c .)
+          else
+            JSON_ARRAY='["default"]'
+          fi
+
+          echo "ip_matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
+
+  build:
+    needs: parse-inputs
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ip: ${{ fromJSON(needs.parse-inputs.outputs.ip_matrix) }}
+
+    steps:
+      - name: Checkout Actions Repo
+        uses: actions/checkout@v4.2.2
+        with:
+          path: 'build-repo'
+
+      - name: Prepare Toolchain Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential gawk flex bison gperf libtool \
+            autoconf automake m4 pkg-config gettext autopoint python3-docutils libncurses5-dev \
+            libncursesw5-dev libglib2.0-dev libssl-dev ccache zlib1g-dev libltdl-dev fakeroot
+
+      - name: 拉取Padavan源码
+        run: |
+          git clone --depth 1 -b $REPO_BRANCH https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/waylin88/rt-n56u.git padavan-src
+
+      - name: Prepare Toolchain
+        run: |
+          cd padavan-src/toolchain-mipsel
+          sh ./dl_toolchain.sh
+
+      - name: 应用 changed_files.tar 补丁（先删除后替换）
+        run: |
+          set -e
+          PATCH_TAR="build-repo/patches/pd-Printer/changed_files.tar"
+          EXTRACT_DIR="${GITHUB_WORKSPACE}/pd_patch_extracted"
+          TRUNK_DIR="${GITHUB_WORKSPACE}/padavan-src/trunk"
+          DELETE_LIST="${EXTRACT_DIR}/changed_files/DELETED.txt"
+
+          echo ">>> 检查补丁压缩包是否存在: ${PATCH_TAR}"
+          if [ ! -f "$PATCH_TAR" ]; then
+            echo "❌ 错误: 未找到 ${PATCH_TAR} 文件！"
+            exit 1
+          fi
+
+          echo ">>> 开始解压补丁压缩包: changed_files.tar"
+          mkdir -p "$EXTRACT_DIR"
+          tar -xf "$PATCH_TAR" -C "$EXTRACT_DIR"
+          echo ">>> 解压完成。"
+
+          if [ ! -d "$TRUNK_DIR" ]; then
+            echo "❌ 错误: 未找到源码 trunk 目录: ${TRUNK_DIR}！"
+            exit 1
+          fi
+
+          # 第一步：按 DELETED.txt 列表删除文件
+          if [ -f "$DELETE_LIST" ]; then
+            echo ">>> 开始删除列表中的文件 (DELETED.txt)"
+            while IFS= read -r rel_path; do
+              # 跳过空行和以 # 开头的注释行
+              case "$rel_path" in
+                ""|"#"*|" "*|"	"*) continue ;;
+              esac
+
+              target="${TRUNK_DIR}/${rel_path}"
+              if [ -e "$target" ]; then
+                rm -rf "$target"
+                echo ">>> 已删除: ${rel_path}"
+              else
+                echo ">>> 跳过(不存在): ${rel_path}"
+              fi
+            done < "$DELETE_LIST"
+            echo ">>> 删除完成。"
+          else
+            echo "⚠️ 警告: 未找到 DELETED.txt，跳过删除步骤。"
+          fi
+
+          # 第二步：将解压出来的文件（除清单文件外）覆盖到 trunk 目录
+          echo ">>> 开始覆盖文件到 trunk 目录"
+          SOURCE_ROOT="${EXTRACT_DIR}/changed_files"
+          for item in "$SOURCE_ROOT"/*; do
+            name=$(basename "$item")
+            # 跳过相关说明/清单文件
+            case "$name" in
+              DELETED.txt|MANIFEST.txt) continue ;;
+            esac
+            cp -rf "$item" "$TRUNK_DIR/"
+            echo ">>> 已覆盖: ${name}/"
+          done
+          echo ">>> changed_files.tar 补丁应用完成！"
+
+      - name: 修改默认 LAN IP
+        run: |
+          TARGET_IP="${{ matrix.ip }}"
+          DEF_H="padavan-src/trunk/user/shared/defaults.h"
+
+          update_lan_ip_config() {
+            local target_ip="$1"
+            local h_file="$2"
+
+            local net_prefix
+            net_prefix=$(echo "$target_ip" | awk -F. '{print $1"."$2"."$3}')
+
+            echo ">>> 正在更新 LAN IP 配置为: ${target_ip} (网段: ${net_prefix}.x)"
+            sed -i -E "s/#define DEF_LAN_ADDR\s+\".*\"/#define DEF_LAN_ADDR\t\t\"${target_ip}\"/g" "$h_file"
+            sed -i -E "s/#define DEF_LAN_DHCP_BEG\s+\".*\"/#define DEF_LAN_DHCP_BEG\t\"${net_prefix}.100\"/g" "$h_file"
+            sed -i -E "s/#define DEF_LAN_DHCP_END\s+\".*\"/#define DEF_LAN_DHCP_END\t\"${net_prefix}.244\"/g" "$h_file"
+          }
+
+          if [ -f "$DEF_H" ]; then
+            if [ "$TARGET_IP" != "default" ]; then
+              update_lan_ip_config "$TARGET_IP" "$DEF_H"
+            fi
+            echo ">>> defaults.h LAN 修改结果验证："
+            grep -E "DEF_LAN_" "$DEF_H"
+          else
+            echo "❌ 错误: 未找到 $DEF_H 文件！"
+            exit 1
+          fi
+
+      - name: Build Firmware
+        run: |
+          cd padavan-src/trunk
+          chmod +x ./build_firmware
+          chmod +x ./clear_tree
+          fakeroot ./build_firmware ${{ github.event.inputs.target_board }}
+
+      - name: Rename Firmware Files
+        run: |
+          TARGET_IP="${{ matrix.ip }}"
+          TARGET_BOARD="${{ github.event.inputs.target_board }}"
+          IMAGE_DIR="padavan-src/trunk/images"
+          OUTPUT_DIR="${GITHUB_WORKSPACE}/output_files"
+
+          mkdir -p "$OUTPUT_DIR"
+          cd "$IMAGE_DIR"
+          shopt -s nullglob
+          firmware_files=(*.trx)
+
+          if [ "${#firmware_files[@]}" -eq 0 ]; then
+            echo "错误: 未找到 .trx 固件文件！"
+            exit 1
+          fi
+
+          for file in "${firmware_files[@]}"; do
+            BASE_NAME="${file%.*}"
+            PREFIX="${BASE_NAME%-*}"
+            NEW_NAME="${PREFIX}-Printer-${TARGET_BOARD}-${TARGET_IP}.trx"
+
+            echo ">>> 修改固件名称: $file -> $NEW_NAME"
+            mv -- "$file" "$NEW_NAME"
+            cp -v -- "$NEW_NAME" "$OUTPUT_DIR/$NEW_NAME"
+          done
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Padavan-Printer-${{ github.event.inputs.target_board }}-${{ matrix.ip }}"
+          path: output_files/*.trx
