@@ -85,7 +85,7 @@ jobs:
           cd padavan-src/toolchain-mipsel
           sh ./dl_toolchain.sh
 
-      - name: 应用 changed_files.tar 补丁（先删除后替换）
+      - name: 应用 changed_files.tar 补丁
         run: |
           set -e
           PATCH_TAR="build-repo/patches/pd-Printer/changed_files.tar"
@@ -144,6 +144,11 @@ jobs:
             echo ">>> 已覆盖: ${name}/"
           done
           echo ">>> changed_files.tar 补丁应用完成！"
+
+          # 补丁替换完成后，执行 setup-printer.sh 用于添加机型适配
+          echo ">>> 执行 setup-printer.sh 添加机型适配..."
+          chmod +x build-repo/patches/pd-Printer/setup-printer.sh
+          ./build-repo/patches/pd-Printer/setup-printer.sh
 
       - name: 修改默认 LAN IP
         run: |
