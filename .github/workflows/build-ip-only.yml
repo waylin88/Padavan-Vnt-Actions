@@ -167,6 +167,21 @@ jobs:
             echo "⚠️ 未找到自定义 trunk 目录，跳过同步。"
           fi
 
+          # 在源码目录中修改 detect_link.c：改用 has_usb_devices()
+          TARGET_DETECT="padavan-src/trunk/user/rc/detect_link.c"
+          if [ -f "$TARGET_DETECT" ]; then
+            if grep -q "is_usb_storage_mounted();" "$TARGET_DETECT"; then
+              echo ">>> 正在修改 detect_link.c 的 USB 检测函数..."
+              sed -i 's/dl_status_usb = is_usb_storage_mounted();/dl_status_usb = has_usb_devices();/' "$TARGET_DETECT"
+              echo ">>> detect_link.c 修改结果验证："
+              grep -n "dl_status_usb =" "$TARGET_DETECT"
+            else
+              echo ">>> detect_link.c 中未找到需要替换的自定义内容，跳过。"
+            fi
+          else
+            echo "⚠️ 警告: 未找到 $TARGET_DETECT 文件，跳过此步骤。"
+          fi
+
       - name: Build Firmware
         run: |
           cd padavan-src/trunk
