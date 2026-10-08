@@ -90,7 +90,7 @@ jobs:
           TARGET_BOARD: ${{ github.event.inputs.target_board }}
         run: |
           set -e
-          PATCH_TAR="build-repo/patches/pd-Printer/changed_files.tar"
+          PATCH_TAR="build-repo/patches/pd-Printer/changed_files.tar.gz"
           EXTRACT_DIR="${GITHUB_WORKSPACE}/pd_patch_extracted"
           TRUNK_DIR="${GITHUB_WORKSPACE}/padavan-src/trunk"
           DELETE_LIST="${EXTRACT_DIR}/changed_files/DELETED.txt"
