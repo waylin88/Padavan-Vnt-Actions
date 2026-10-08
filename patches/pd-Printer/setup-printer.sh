@@ -35,10 +35,20 @@ copy_dir_if_exists() {
 }
 
 # 1. 覆盖机型配置
-echo ">>> [1/4] 覆盖机型配置文件"
+echo ">>> [1/5] 覆盖机型配置文件"
 copy_dir_if_exists "${REPO_DIR}/trunk" "${SRC_DIR}/trunk"
 
-# 2. 修改默认 WiFi SSID 和 defaults.c 参数
+# 2. 关闭所有机型配置文件的 IPv6 支持
+echo ">>> 关闭机型配置文件的 IPv6 支持"
+CONFIG_TEMPLATE_DIR="${SRC_DIR}/trunk/configs/templates"
+if [ -d "${CONFIG_TEMPLATE_DIR}" ]; then
+    sed -i -E "s/^(CONFIG_FIRMWARE_ENABLE_IPV6=).*/\1n/" "${CONFIG_TEMPLATE_DIR}"/*.config
+    grep -H "CONFIG_FIRMWARE_ENABLE_IPV6=" "${CONFIG_TEMPLATE_DIR}"/*.config || echo "  ⚠️ 未找到 CONFIG_FIRMWARE_ENABLE_IPV6，请检查模板配置"
+else
+    echo "  ⚠️ 警告: 模板配置目录不存在，跳过: ${CONFIG_TEMPLATE_DIR}"
+fi
+
+# 3. 修改默认 WiFi SSID 和 defaults.c 参数
 echo ">>> 修改默认参数"
 CUSTOM_WIFI_NAME="YYWiFi"
 echo "  - WiFi SSID 前缀: ${CUSTOM_WIFI_NAME}"
@@ -73,7 +83,7 @@ for setting in "${DEFAULT_SETTINGS[@]}"; do
 done
 grep -E 'rt_sta_auto|wl_sta_auto|fw_enable_x|wl_wme|rt_wme|ip6_|telnetd|sshd_enable|lltd_enable|help_enable' "${DEFAULTS_C_PATH}" || echo "  ⚠️ 未匹配到默认参数，请检查 defaults.c"
 
-# 3. 按机型执行专属补丁
+# 4. 按机型执行专属补丁
 echo ">>> 执行机型补丁 (${TARGET_BOARD})"
 
 if [ "${TARGET_BOARD}" = "ZY-L1-7628N" ]; then
@@ -96,7 +106,7 @@ if [ "${TARGET_BOARD}" = "ZTE_E8820S" ]; then
     grep GPIO_PCIE_PORT1 "${PCI_C_PATH}" || echo "  ⚠️ 未匹配到 GPIO_PCIE_PORT1，请检查 pci.c"
 fi
 
-# 4. 屏蔽 BusyBox DHCPv6 的日志噪音
+# 5. 屏蔽 BusyBox DHCPv6 的日志噪音
 echo ">>> 屏蔽 BusyBox DHCPv6 日志噪音"
 sed -i 's/bb_info_msg("status code for/if (0) bb_info_msg("status code for/' \
     "${SRC_DIR}/trunk/user/busybox/busybox-1.24.x/networking/udhcp/dhcp6c_ia.c"
