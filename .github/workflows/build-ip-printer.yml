@@ -136,15 +136,43 @@ jobs:
           # 第二步：将解压出来的文件（除清单文件外）覆盖到 trunk 目录
           echo ">>> 开始覆盖文件到 trunk 目录"
           SOURCE_ROOT="${EXTRACT_DIR}/changed_files"
+          REPLACED_COUNT=0
+          ADDED_COUNT=0
           for item in "$SOURCE_ROOT"/*; do
             name=$(basename "$item")
             # 跳过相关说明/清单文件
             case "$name" in
               DELETED.txt|MANIFEST.txt) continue ;;
             esac
-            cp -rf "$item" "$TRUNK_DIR/"
-            echo ">>> 已覆盖: ${name}/"
+
+            if [ -d "$item" ]; then
+              # 目录：先逐个列出会被替换/新增的文件，再整体覆盖
+              while IFS= read -r -d '' f; do
+                rel="${f#"$SOURCE_ROOT"/}"
+                if [ -e "${TRUNK_DIR}/${rel}" ]; then
+                  echo ">>> 替换: ${rel}"
+                  REPLACED_COUNT=$((REPLACED_COUNT+1))
+                else
+                  echo ">>> 新增: ${rel}"
+                  ADDED_COUNT=$((ADDED_COUNT+1))
+                fi
+              done < <(find "$item" -type f -print0)
+              cp -rf "$item" "$TRUNK_DIR/"
+              echo ">>> 已覆盖目录: ${name}/"
+            else
+              # 单文件：列出是否替换/新增
+              if [ -e "${TRUNK_DIR}/${name}" ]; then
+                echo ">>> 替换: ${name}"
+                REPLACED_COUNT=$((REPLACED_COUNT+1))
+              else
+                echo ">>> 新增: ${name}"
+                ADDED_COUNT=$((ADDED_COUNT+1))
+              fi
+              cp -rf "$item" "$TRUNK_DIR/"
+              echo ">>> 已覆盖文件: ${name}"
+            fi
           done
+          echo ">>> 文件覆盖统计: 替换 ${REPLACED_COUNT} 个，新增 ${ADDED_COUNT} 个"
           echo ">>> changed_files.tar 补丁应用完成！"
 
           # 补丁替换完成后，执行 setup-printer.sh 用于添加机型适配
