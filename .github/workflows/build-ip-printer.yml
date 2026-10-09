@@ -218,10 +218,13 @@ jobs:
 
       - name: Rename Firmware Files
         run: |
-          TARGET_IP="${{ matrix.ip }}"
           TARGET_BOARD="${{ github.event.inputs.target_board }}"
           IMAGE_DIR="padavan-src/trunk/images"
           OUTPUT_DIR="${GITHUB_WORKSPACE}/output_files"
+
+          # 编译完成时间（北京时间 UTC+8），格式如 202606232044
+          BUILD_TIME=$(TZ='Asia/Shanghai' date +%Y%m%d%H%M)
+          echo ">>> 编译完成时间(北京时间): ${BUILD_TIME}"
 
           mkdir -p "$OUTPUT_DIR"
           cd "$IMAGE_DIR"
@@ -234,9 +237,7 @@ jobs:
           fi
 
           for file in "${firmware_files[@]}"; do
-            BASE_NAME="${file%.*}"
-            PREFIX="${BASE_NAME%-*}"
-            NEW_NAME="${PREFIX}-Printer-${TARGET_BOARD}-${TARGET_IP}.trx"
+            NEW_NAME="${TARGET_BOARD}-Printer-${BUILD_TIME}.trx"
 
             echo ">>> 修改固件名称: $file -> $NEW_NAME"
             mv -- "$file" "$NEW_NAME"
