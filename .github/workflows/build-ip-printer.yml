@@ -14,6 +14,8 @@ on:
           - 'ZY-L1'
           - 'ZY-L1-7620N'
           - 'ZY-L1-7628N'
+          - 'ZY-L1-7628N-NOAP'
+          - 'ZY-L1-7628N-NOAP-NOWB'
           - 'E8820V2'
           - 'ZTE_E8820S'
 
