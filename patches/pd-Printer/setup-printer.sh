@@ -92,6 +92,18 @@ if [ "${TARGET_BOARD}" = "ZY-L1-7628N" ]; then
     grep -n "dl_status_usb =" "$TARGET_DETECT" || echo "  ⚠️ 未匹配到 dl_status_usb=，请检查 detect_link.c"
 fi
 
+if [ "${TARGET_BOARD}" = "ZY-L1-7628N-NOAP" ]; then
+    echo "  - ZY-L1-7628N USB灯响应亮灯补丁"
+    sed -i 's/dl_status_usb = is_usb_storage_mounted();/dl_status_usb = has_usb_devices();/' "$TARGET_DETECT"
+    grep -n "dl_status_usb =" "$TARGET_DETECT" || echo "  ⚠️ 未匹配到 dl_status_usb=，请检查 detect_link.c"
+fi
+
+if [ "${TARGET_BOARD}" = "ZY-L1-7628N-NOAP-NOWB" ]; then
+    echo "  - ZY-L1-7628N USB灯响应亮灯补丁"
+    sed -i 's/dl_status_usb = is_usb_storage_mounted();/dl_status_usb = has_usb_devices();/' "$TARGET_DETECT"
+    grep -n "dl_status_usb =" "$TARGET_DETECT" || echo "  ⚠️ 未匹配到 dl_status_usb=，请检查 detect_link.c"
+fi
+
 if [ "${TARGET_BOARD}" = "E8820V2" ]; then
     echo "  - 8820v2 WiFi 不启动补丁 (GPIO_PCIE_PORT1 = 26)"
     PCI_C_PATH="${SRC_DIR}/trunk/linux-3.4.x/arch/mips/rt2880/pci.c"
